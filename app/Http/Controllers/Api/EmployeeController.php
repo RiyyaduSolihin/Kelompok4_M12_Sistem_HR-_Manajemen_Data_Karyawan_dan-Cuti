@@ -142,4 +142,31 @@ class EmployeeController extends Controller
             'data' => $employee,
         ], 200);
     }
+
+    /**
+     * PATCH /api/employees/{id}/deactivate
+     * Mengubah status karyawan menjadi nonaktif dan mencatat tanggal berhenti
+     * Sesuai AC M12-US2: Riwayat tetap tersimpan tanpa perintah DELETE (hard delete).
+     */
+    public function deactivate(Request $request, string $id): JsonResponse
+    {
+        $request->validate([
+            'tanggal_berhenti' => 'required|date',
+        ], [
+            'tanggal_berhenti.required' => 'Tanggal berhenti wajib diisi.',
+            'tanggal_berhenti.date' => 'Format tanggal berhenti tidak valid.',
+        ]);
+
+        $employee = Employee::findOrFail($id);
+
+        $employee->status_kerja = 'nonaktif';
+        $employee->tanggal_berhenti = $request->tanggal_berhenti;
+        $employee->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Karyawan berhasil dinonaktifkan dan riwayat kepegawaian tetap tersimpan.',
+            'data' => $employee,
+        ], 200);
+    }
 }
