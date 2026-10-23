@@ -37,4 +37,22 @@ class KaryawanController extends Controller
             'data' => $karyawan,
         ], 200);
     }
+
+    /**
+     * Endpoint khusus penyedia data karyawan aktif untuk M13 dan M14
+     */
+    public function getActiveKaryawan(): JsonResponse
+    {
+        // Query untuk mengambil karyawan yang HANYA berstatus 'aktif'
+        // Select digunakan untuk membatasi kolom agar payload API lebih ringan
+        $karyawanAktif = Karyawan::where('status_kerja', 'aktif')
+            ->select('id', 'nik', 'nama', 'jabatan', 'divisi', 'status_kerja')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil mengambil daftar karyawan aktif.',
+            'data' => $karyawanAktif
+        ], 200);
+    }
 }
