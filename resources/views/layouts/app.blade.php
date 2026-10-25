@@ -76,7 +76,7 @@
         <div id="sidebar-backdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-black/30 z-40 hidden lg:hidden transition-opacity"></div>
 
         <!-- Sidebar (Lebar 240px tetap, jadi Laci di < 1024px - Sesuai Panduan Hal 10) -->
-        <aside id="main-sidebar" class="w-[240px] shrink-0 bg-[var(--surface)] border-r border-[var(--line)] py-5 px-3 flex flex-col justify-between fixed lg:static inset-y-0 left-0 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-200 lg:transition-none shadow-lg lg:shadow-none h-full">
+        <aside id="main-sidebar" class="w-[240px] shrink-0 bg-[var(--surface)] border-r border-[var(--line)] py-5 px-3 flex flex-col justify-between fixed lg:static inset-y-0 left-0 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-200 lg:transition-none shadow-lg lg:shadow-none h-full lg:h-auto lg:min-h-[calc(100vh-56px)]">
             <div class="space-y-6">
                 <!-- Group 1: Modul SDM & Cuti -->
                 <div>
