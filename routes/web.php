@@ -18,3 +18,7 @@ Route::patch('/karyawan/{id}/deactivate', [KaryawanController::class, 'deactivat
 // Endpoint kontrak data khusus karyawan aktif (dikonsumsi M13 & M14)
 Route::get('/karyawan/aktif', [KaryawanController::class, 'getActiveKaryawan']);
 Route::get('/api/karyawan/aktif', [KaryawanController::class, 'getActiveKaryawan']);
+
+// Halaman Dokumentasi API (Swagger UI)
+Route::view('/api/documentation', 'swagger')->name('swagger.docs');
+Route::view('/docs', 'swagger');
