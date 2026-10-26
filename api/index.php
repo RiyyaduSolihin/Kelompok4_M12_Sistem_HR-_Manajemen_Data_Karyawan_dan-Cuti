@@ -1,5 +1,10 @@
 <?php
 
+// Pastikan Symfony/Laravel tidak menganggap folder /api dari /api/index.php sebagai subfolder base URL
+$_SERVER['SCRIPT_NAME'] = '/index.php';
+$_SERVER['SCRIPT_FILENAME'] = __DIR__.'/../public/index.php';
+$_SERVER['PHP_SELF'] = '/index.php';
+
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 if ($uri && str_starts_with($uri, '/build/')) {
     $file = __DIR__.'/../public'.$uri;
