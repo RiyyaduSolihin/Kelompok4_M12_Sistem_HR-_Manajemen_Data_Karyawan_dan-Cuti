@@ -2,21 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class Karyawan extends Model
+/**
+ * Alias Model Karyawan yang identik 100% dengan Employee (Poin 7: Employee = Karyawan)
+ */
+class Karyawan extends Employee
 {
-    use HasFactory;
-
     protected $table = 'employees';
-
-    protected $fillable = [
-        'nik',
-        'nama',
-        'jabatan',
-        'divisi',
-        'status_kerja',
-        'tanggal_berhenti',
-    ];
 }

@@ -3,17 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swagger UI - API Dokumentasi M12 Sistem HR (Araya Business Hub)</title>
+    <title>Swagger UI - API Dokumentasi Sistem HR (Araya Business Hub)</title>
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.18.2/swagger-ui.css">
     <style>
-        body {
-            margin: 0;
-            background: #fafafa;
-        }
-        .topbar {
-            background-color: #1F3F7A !important;
-            padding: 12px 24px !important;
-        }
+        body { margin: 0; background: #fafafa; }
+        .topbar { background-color: #1F3F7A !important; padding: 12px 24px !important; }
         .topbar-wrapper {
             display: flex;
             align-items: center;
@@ -30,16 +24,14 @@
             font-size: 13px;
             font-weight: 600;
         }
-        .topbar-wrapper a.back-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-        }
+        .topbar-wrapper a.back-btn:hover { background: rgba(255, 255, 255, 0.25); }
     </style>
 </head>
 <body>
     <div class="topbar">
         <div class="topbar-wrapper">
             <div>
-                <strong>Araya Business Hub — Dokumentasi REST API Modul M12 (Manajemen Data Karyawan)</strong>
+                <strong>Araya Business Hub — Dokumentasi REST API & RBAC Lintas 4 Modul (M12, M13, M14)</strong>
             </div>
             <a href="{{ url('/') }}" class="back-btn">&larr; Kembali ke Dashboard</a>
         </div>
@@ -52,108 +44,111 @@
         const spec = {
             openapi: "3.0.3",
             info: {
-                title: "API Sistem HR - Modul M12 (Manajemen Data Karyawan)",
-                version: "1.0.0",
-                description: "Dokumentasi RESTful API untuk **Modul M12 (Manajemen Data Karyawan)** serta Endpoint Kontrak Data untuk **Modul M13 (Manajemen Cuti)** dan **Modul M14 (Pengelolaan Komponen Gaji)**.\n\nSeluruh endpoint di bawah ini terhubung langsung ke database **PostgreSQL (Neon Console)** dan dapat diuji secara interaktif melalui tombol **Try it out**."
+                title: "API Sistem HR - Modul M12 (Login, RBAC HR vs Employee, & Kontrak Data)",
+                version: "2.0.0",
+                description: "Dokumentasi RESTful API terpadu yang menyelaraskan `/api/employees` dan `/api/karyawan` dengan kontrol akses berbasis role (**RBAC Lintas 4 Modul**):\n\n" +
+                    "### Akun Uji Coba Default (Database Neon):\n" +
+                    "- **Akun HR (`Admin HR`)**: Email `hr@araya.com` | Password `password123` (Bisa akses seluruh karyawan, karyawan aktif, tambah/edit, dan deaktivasi)\n" +
+                    "- **Akun Karyawan Biasa (`Employee`)**: Email `andi@araya.com` | Password `password123` (Hanya bisa melihat data kepegawaian miliknya sendiri)\n\n" +
+                    "### Cara Autentikasi di Swagger / Modul Lain:\n" +
+                    "1. Jalankan **`POST /api/login`**, salin nilai `token`, lalu klik tombol hijau **`Authorize`** di kanan atas dan masukkan token tersebut, **ATAU**\n" +
+                    "2. Gunakan Header **`X-User-Role`** (`Admin HR` atau `Employee`) dan **`X-Employee-Id`**."
             },
             servers: [
-                {
-                    url: window.location.origin,
-                    description: "Server Aktif Saat Ini"
-                },
-                {
-                    url: "https://kelompok4-m12-sistem-hr-manajemen-d.vercel.app",
-                    description: "Production Server (Vercel + Neon PostgreSQL)"
-                },
-                {
-                    url: "http://127.0.0.1:8000",
-                    description: "Local Development Server"
-                }
+                { url: window.location.origin, description: "Server Aktif Saat Ini" },
+                { url: "https://kelompok4-m12-sistem-hr-manajemen-d.vercel.app", description: "Production Server (Vercel + Neon PostgreSQL)" },
+                { url: "http://127.0.0.1:8000", description: "Local Development Server" }
+            ],
+            security: [
+                { BearerAuth: [] }
             ],
             tags: [
-                {
-                    name: "Kontrak Data (M13 & M14)",
-                    description: "Endpoint penyedia daftar karyawan aktif untuk konsumsi Modul M13 dan M14"
-                },
-                {
-                    name: "CRUD Karyawan (M12-US1)",
-                    description: "Pengelolaan data master karyawan & validasi duplikasi NIK"
-                },
-                {
-                    name: "Deaktivasi Karyawan (M12-US2)",
-                    description: "Penonaktifan status kerja karyawan & pencatatan tanggal berhenti tanpa hard delete"
-                }
+                { name: "1. Autentikasi & Perjanjian User (4 Modul)", description: "Endpoint Login, Cek Profil/Role, dan Logout" },
+                { name: "2. Karyawan Aktif (Hanya HR)", description: "Endpoint kontrak data karyawan aktif (Diselaraskan: /api/employees/active, /api/employees/aktif, /api/karyawan/aktif)" },
+                { name: "3. Data Karyawan / Employees (Identik)", description: "HR dapat mengambil seluruh data karyawan; User biasa hanya dapat mengambil datanya sendiri" },
+                { name: "4. Deaktivasi Karyawan (Hanya HR)", description: "Menonaktifkan karyawan dan mencatat tanggal berhenti tanpa hard delete" }
             ],
             paths: {
-                "/api/karyawan/aktif": {
-                    get: {
-                        tags: ["Kontrak Data (M13 & M14)"],
-                        summary: "Mengambil daftar karyawan yang berstatus aktif",
-                        description: "Digunakan oleh Modul M13 & M14 untuk mendapatkan daftar karyawan yang masih aktif bekerja.",
-                        responses: {
-                            "200": {
-                                description: "Berhasil mengambil daftar karyawan aktif",
-                                content: {
-                                    "application/json": {
-                                        schema: {
-                                            type: "object",
-                                            properties: {
-                                                success: { type: "boolean", example: true },
-                                                message: { type: "string", example: "Berhasil mengambil daftar karyawan aktif." },
-                                                data: {
-                                                    type: "array",
-                                                    items: { $ref: "#/components/schemas/EmployeeActive" }
-                                                }
-                                            }
+                "/api/login": {
+                    post: {
+                        tags: ["1. Autentikasi & Perjanjian User (4 Modul)"],
+                        security: [],
+                        summary: "Login pengguna (HR / Employee) menggunakan Email atau NIK",
+                        requestBody: {
+                            required: true,
+                            content: {
+                                "application/json": {
+                                    schema: {
+                                        type: "object",
+                                        properties: {
+                                            email: { type: "string", example: "hr@araya.com" },
+                                            password: { type: "string", example: "password123" }
                                         }
                                     }
                                 }
                             }
+                        },
+                        responses: {
+                            "200": { description: "Login berhasil dan mengembalikan Bearer token beserta role & employee_id" },
+                            "401": { description: "Email/NIK atau password salah" }
+                        }
+                    }
+                },
+                "/api/me": {
+                    get: {
+                        tags: ["1. Autentikasi & Perjanjian User (4 Modul)"],
+                        summary: "Melihat profil user, role, dan data karyawan yang sedang login",
+                        responses: {
+                            "200": { description: "Profil pengguna berhasil diambil" },
+                            "401": { description: "Unauthenticated" }
+                        }
+                    }
+                },
+                "/api/employees/active": {
+                    get: {
+                        tags: ["2. Karyawan Aktif (Hanya HR)"],
+                        summary: "Mengambil daftar seluruh karyawan aktif — HANYA HR",
+                        description: "Alias identik yang juga tersedia:\n- `GET /api/employees/aktif`\n- `GET /api/karyawan/aktif`\n- `GET /api/karyawan/active`\n- `GET /api/employees?status_kerja=aktif`",
+                        responses: {
+                            "200": { description: "Berhasil mengambil daftar karyawan aktif (Khusus HR)" },
+                            "403": { description: "Akses ditolak jika diakses oleh role Employee biasa" }
+                        }
+                    }
+                },
+                "/api/karyawan/aktif": {
+                    get: {
+                        tags: ["2. Karyawan Aktif (Hanya HR)"],
+                        summary: "Mengambil daftar seluruh karyawan aktif (Alias Kontrak M13 & M14) — HANYA HR",
+                        responses: {
+                            "200": { description: "Berhasil mengambil daftar karyawan aktif (Khusus HR)" },
+                            "403": { description: "Akses ditolak jika diakses oleh role Employee biasa" }
                         }
                     }
                 },
                 "/api/employees": {
                     get: {
-                        tags: ["CRUD Karyawan (M12-US1)"],
-                        summary: "Menampilkan daftar seluruh karyawan",
-                        description: "Mengambil semua data karyawan (aktif maupun nonaktif). Dapat difilter menggunakan query parameter `status_kerja`.",
+                        tags: ["3. Data Karyawan / Employees (Identik)"],
+                        summary: "Mengambil daftar karyawan (HR: seluruh karyawan | Employee: hanya data diri sendiri)",
+                        description: "Identik dengan `GET /api/karyawan`.",
                         parameters: [
                             {
                                 name: "status_kerja",
                                 in: "query",
                                 required: false,
-                                description: "Filter berdasarkan status kerja (`aktif` atau `nonaktif`)",
-                                schema: {
-                                    type: "string",
-                                    enum: ["aktif", "nonaktif"]
-                                }
+                                description: "Filter status (`aktif` / `active` atau `nonaktif` — hanya untuk HR)",
+                                schema: { type: "string", enum: ["aktif", "nonaktif"] }
                             }
                         ],
                         responses: {
-                            "200": {
-                                description: "Daftar data karyawan berhasil diambil",
-                                content: {
-                                    "application/json": {
-                                        schema: {
-                                            type: "object",
-                                            properties: {
-                                                success: { type: "boolean", example: true },
-                                                message: { type: "string", example: "Daftar data karyawan berhasil diambil." },
-                                                data: {
-                                                    type: "array",
-                                                    items: { $ref: "#/components/schemas/Employee" }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            "200": { description: "Berhasil mengambil data karyawan sesuai hak akses role" },
+                            "401": { description: "Belum login" },
+                            "403": { description: "User biasa mencoba memfilter seluruh karyawan aktif" }
                         }
                     },
                     post: {
-                        tags: ["CRUD Karyawan (M12-US1)"],
-                        summary: "Menyimpan data karyawan baru (M12-US1: AC 1 & AC 2)",
-                        description: "Menambahkan karyawan baru dengan validasi NIK unik (menolak duplikasi NIK).",
+                        tags: ["3. Data Karyawan / Employees (Identik)"],
+                        summary: "Menambahkan karyawan baru — HANYA HR",
+                        description: "Identik dengan `POST /api/karyawan`. Mendukung field Indonesia (`nama`, `jabatan`, `divisi`) maupun Inggris (`name`, `position`, `department`).",
                         requestBody: {
                             required: true,
                             content: {
@@ -163,77 +158,32 @@
                             }
                         },
                         responses: {
-                            "201": {
-                                description: "Informasi kepegawaian berhasil disimpan",
-                                content: {
-                                    "application/json": {
-                                        schema: {
-                                            type: "object",
-                                            properties: {
-                                                success: { type: "boolean", example: true },
-                                                message: { type: "string", example: "Informasi kepegawaian berhasil disimpan." },
-                                                data: { $ref: "#/components/schemas/Employee" }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            "422": {
-                                description: "Validasi gagal (input kosong atau NIK duplikat)",
-                                content: {
-                                    "application/json": {
-                                        schema: { $ref: "#/components/schemas/ValidationError" }
-                                    }
-                                }
-                            }
+                            "201": { description: "Karyawan berhasil disimpan" },
+                            "403": { description: "Akses ditolak (Bukan HR)" },
+                            "422": { description: "Validasi gagal / NIK duplikat" }
                         }
                     }
                 },
                 "/api/employees/{id}": {
                     get: {
-                        tags: ["CRUD Karyawan (M12-US1)"],
-                        summary: "Menampilkan detail 1 karyawan berdasarkan ID",
+                        tags: ["3. Data Karyawan / Employees (Identik)"],
+                        summary: "Detail 1 karyawan (HR: bebas | Employee: hanya ID miliknya sendiri)",
+                        description: "Identik dengan `GET /api/karyawan/{id}`.",
                         parameters: [
-                            {
-                                name: "id",
-                                in: "path",
-                                required: true,
-                                description: "ID unik karyawan",
-                                schema: { type: "integer", example: 1 }
-                            }
+                            { name: "id", in: "path", required: true, schema: { type: "integer", example: 1 } }
                         ],
                         responses: {
-                            "200": {
-                                description: "Detail karyawan berhasil diambil",
-                                content: {
-                                    "application/json": {
-                                        schema: {
-                                            type: "object",
-                                            properties: {
-                                                success: { type: "boolean", example: true },
-                                                message: { type: "string", example: "Detail karyawan berhasil diambil." },
-                                                data: { $ref: "#/components/schemas/Employee" }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            "404": {
-                                description: "Data karyawan tidak ditemukan"
-                            }
+                            "200": { description: "Detail karyawan berhasil diambil" },
+                            "403": { description: "User biasa mencoba melihat data karyawan lain" },
+                            "404": { description: "Data karyawan tidak ditemukan" }
                         }
                     },
                     put: {
-                        tags: ["CRUD Karyawan (M12-US1)"],
-                        summary: "Memperbarui data karyawan berdasarkan ID",
+                        tags: ["3. Data Karyawan / Employees (Identik)"],
+                        summary: "Memperbarui data karyawan — HANYA HR",
+                        description: "Identik dengan `PUT /api/karyawan/{id}`.",
                         parameters: [
-                            {
-                                name: "id",
-                                in: "path",
-                                required: true,
-                                description: "ID unik karyawan",
-                                schema: { type: "integer", example: 1 }
-                            }
+                            { name: "id", in: "path", required: true, schema: { type: "integer", example: 1 } }
                         ],
                         requestBody: {
                             required: true,
@@ -244,48 +194,18 @@
                             }
                         },
                         responses: {
-                            "200": {
-                                description: "Data karyawan berhasil diperbarui",
-                                content: {
-                                    "application/json": {
-                                        schema: {
-                                            type: "object",
-                                            properties: {
-                                                success: { type: "boolean", example: true },
-                                                message: { type: "string", example: "Data karyawan berhasil diperbarui." },
-                                                data: { $ref: "#/components/schemas/Employee" }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            "404": {
-                                description: "Data karyawan tidak ditemukan"
-                            },
-                            "422": {
-                                description: "Validasi gagal (NIK sudah digunakan karyawan lain)",
-                                content: {
-                                    "application/json": {
-                                        schema: { $ref: "#/components/schemas/ValidationError" }
-                                    }
-                                }
-                            }
+                            "200": { description: "Data karyawan berhasil diperbarui" },
+                            "403": { description: "Akses ditolak (Bukan HR)" }
                         }
                     }
                 },
-                "/api/karyawan/{id}/deactivate": {
+                "/api/employees/{id}/deactivate": {
                     patch: {
-                        tags: ["Deaktivasi Karyawan (M12-US2)"],
-                        summary: "Menonaktifkan karyawan dan mencatat tanggal berhenti (M12-US2)",
-                        description: "Mengubah `status_kerja` menjadi `nonaktif` dan menyimpan `tanggal_berhenti` tanpa menghapus riwayat data karyawan (tanpa hard delete).",
+                        tags: ["4. Deaktivasi Karyawan (Hanya HR)"],
+                        summary: "Menonaktifkan karyawan & mencatat tanggal berhenti — HANYA HR",
+                        description: "Identik dengan `PATCH /api/karyawan/{id}/deactivate`.",
                         parameters: [
-                            {
-                                name: "id",
-                                in: "path",
-                                required: true,
-                                description: "ID unik karyawan yang akan dinonaktifkan",
-                                schema: { type: "integer", example: 1 }
-                            }
+                            { name: "id", in: "path", required: true, schema: { type: "integer", example: 2 } }
                         ],
                         requestBody: {
                             required: true,
@@ -295,92 +215,37 @@
                                         type: "object",
                                         required: ["tanggal_berhenti"],
                                         properties: {
-                                            tanggal_berhenti: {
-                                                type: "string",
-                                                format: "date",
-                                                example: "2026-10-26"
-                                            }
+                                            tanggal_berhenti: { type: "string", format: "date", example: "2026-10-26" }
                                         }
                                     }
                                 }
                             }
                         },
                         responses: {
-                            "200": {
-                                description: "Karyawan berhasil dinonaktifkan dan riwayat tetap tersimpan",
-                                content: {
-                                    "application/json": {
-                                        schema: {
-                                            type: "object",
-                                            properties: {
-                                                success: { type: "boolean", example: true },
-                                                message: { type: "string", example: "Karyawan berhasil dinonaktifkan dan riwayat kepegawaian tetap tersimpan." },
-                                                data: { $ref: "#/components/schemas/Employee" }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            "422": {
-                                description: "Tanggal berhenti kosong atau format tidak valid"
-                            }
+                            "200": { description: "Karyawan berhasil dinonaktifkan" },
+                            "403": { description: "Akses ditolak: Hanya HR yang boleh menonaktifkan karyawan" }
                         }
                     }
                 }
             },
             components: {
+                securitySchemes: {
+                    BearerAuth: {
+                        type: "http",
+                        scheme: "bearer",
+                        description: "Masukkan token dari hasil POST /api/login"
+                    }
+                },
                 schemas: {
-                    Employee: {
-                        type: "object",
-                        properties: {
-                            id: { type: "integer", example: 1 },
-                            nik: { type: "string", example: "EMP-2026-001" },
-                            nama: { type: "string", example: "Budi Santoso" },
-                            jabatan: { type: "string", example: "Staff HR" },
-                            divisi: { type: "string", example: "HRD" },
-                            status_kerja: { type: "string", enum: ["aktif", "nonaktif"], example: "aktif" },
-                            tanggal_berhenti: { type: "string", format: "date", nullable: true, example: null },
-                            created_at: { type: "string", format: "date-time", example: "2026-10-25T08:00:00.000000Z" },
-                            updated_at: { type: "string", format: "date-time", example: "2026-10-25T08:00:00.000000Z" }
-                        }
-                    },
-                    EmployeeActive: {
-                        type: "object",
-                        properties: {
-                            id: { type: "integer", example: 1 },
-                            nik: { type: "string", example: "EMP-2026-001" },
-                            nama: { type: "string", example: "Budi Santoso" },
-                            jabatan: { type: "string", example: "Staff HR" },
-                            divisi: { type: "string", example: "HRD" },
-                            status_kerja: { type: "string", example: "aktif" }
-                        }
-                    },
                     EmployeeInput: {
                         type: "object",
                         required: ["nik", "nama", "jabatan", "divisi", "status_kerja"],
                         properties: {
-                            nik: { type: "string", maxLength: 30, example: "EMP-2026-001" },
-                            nama: { type: "string", maxLength: 100, example: "Budi Santoso" },
-                            jabatan: { type: "string", maxLength: 50, example: "Staff HR" },
-                            divisi: { type: "string", maxLength: 50, example: "HRD" },
+                            nik: { type: "string", example: "2026005" },
+                            nama: { type: "string", example: "Siti Aminah" },
+                            jabatan: { type: "string", example: "Analis SDM" },
+                            divisi: { type: "string", example: "HRD" },
                             status_kerja: { type: "string", enum: ["aktif", "nonaktif"], example: "aktif" }
-                        }
-                    },
-                    ValidationError: {
-                        type: "object",
-                        properties: {
-                            success: { type: "boolean", example: false },
-                            message: { type: "string", example: "Gagal menyimpan data karyawan. Periksa kembali input Anda." },
-                            errors: {
-                                type: "object",
-                                properties: {
-                                    nik: {
-                                        type: "array",
-                                        items: { type: "string" },
-                                        example: ["Sistem menolak duplikasi: NIK sudah terdaftar."]
-                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -392,13 +257,10 @@
                 spec: spec,
                 dom_id: '#swagger-ui',
                 deepLinking: true,
-                presets: [
-                    SwaggerUIBundle.presets.apis
-                ],
+                presets: [SwaggerUIBundle.presets.apis],
                 layout: "BaseLayout"
             });
         };
     </script>
 </body>
 </html>
-
