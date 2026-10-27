@@ -46,6 +46,30 @@
         </div>
     @endif
 
+    @if($errors->has('nik'))
+        <div style="background:#FEE2E2;border-left:4px solid #DC2626;padding:1rem;border-radius:6px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 4px rgba(220,38,38,0.15);">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <span style="width:24px;height:24px;border-radius:50%;background:#DC2626;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">✕</span>
+                <div>
+                    <p style="font-size:14px;font-weight:700;color:#991B1B;margin:0;">NIK sudah terdaftar</p>
+                    <p style="font-size:12px;color:#DC2626;margin:2px 0 0;">{{ $errors->first('nik') }}</p>
+                </div>
+            </div>
+            <button onclick="this.parentElement.remove()" style="color:#DC2626;background:none;border:none;font-size:20px;font-weight:700;cursor:pointer;margin-left:16px;" onmouseover="this.style.color='#991B1B'" onmouseout="this.style.color='#DC2626'">&times;</button>
+        </div>
+    @elseif($errors->any())
+        <div style="background:#FEE2E2;border-left:4px solid #DC2626;padding:1rem;border-radius:6px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 4px rgba(220,38,38,0.15);">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <span style="width:24px;height:24px;border-radius:50%;background:#DC2626;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">✕</span>
+                <div>
+                    <p style="font-size:14px;font-weight:700;color:#991B1B;margin:0;">Gagal menyimpan data</p>
+                    <p style="font-size:12px;color:#DC2626;margin:2px 0 0;">{{ $errors->first() }}</p>
+                </div>
+            </div>
+            <button onclick="this.parentElement.remove()" style="color:#DC2626;background:none;border:none;font-size:20px;font-weight:700;cursor:pointer;margin-left:16px;" onmouseover="this.style.color='#991B1B'" onmouseout="this.style.color='#DC2626'">&times;</button>
+        </div>
+    @endif
+
     <!-- Baris Alat: Pencarian dan Filter -->
     <div class="flex flex-col sm:flex-row items-center gap-3">
         <!-- Search Input -->
@@ -218,11 +242,34 @@
             </table>
         </div>
 
-        <!-- Table Footer: Jumlah Data di Kiri dan Nomor Halaman di Kanan (Sesuai Panduan Hal 7-8) -->
+        <!-- Table Footer: Jumlah Data di Kiri dan Nomor Halaman di Kanan -->
         <div class="p-4 border-t border-[var(--line)] bg-[var(--surface)] flex items-center justify-between text-xs text-[var(--text-muted)]">
-            <span id="footer-count">Menampilkan 1–{{ count($employees) }} dari {{ count($employees) }} karyawan</span>
+            <span id="footer-count">
+                Menampilkan {{ $employees->firstItem() }}–{{ $employees->lastItem() }} dari {{ $employees->total() }} karyawan
+            </span>
             <div class="inline-flex items-center gap-1 font-head">
-                <span class="w-7 h-7 flex items-center justify-center rounded-[var(--radius-sm)] bg-[var(--primary)] text-white font-semibold text-xs shadow-sm">1</span>
+                {{-- Tombol Prev --}}
+                @if ($employees->onFirstPage())
+                    <span class="w-7 h-7 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-muted)] cursor-not-allowed opacity-40">‹</span>
+                @else
+                    <a href="{{ $employees->previousPageUrl() }}" class="w-7 h-7 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text)] hover:bg-[var(--surface-2)] transition font-semibold">‹</a>
+                @endif
+
+                {{-- Nomor Halaman --}}
+                @foreach ($employees->getUrlRange(1, $employees->lastPage()) as $page => $url)
+                    @if ($page == $employees->currentPage())
+                        <span class="w-7 h-7 flex items-center justify-center rounded-[var(--radius-sm)] bg-[var(--primary)] text-white font-semibold text-xs shadow-sm">{{ $page }}</span>
+                    @else
+                        <a href="{{ $url }}" class="w-7 h-7 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text)] hover:bg-[var(--surface-2)] transition font-semibold text-xs">{{ $page }}</a>
+                    @endif
+                @endforeach
+
+                {{-- Tombol Next --}}
+                @if ($employees->hasMorePages())
+                    <a href="{{ $employees->nextPageUrl() }}" class="w-7 h-7 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text)] hover:bg-[var(--surface-2)] transition font-semibold">›</a>
+                @else
+                    <span class="w-7 h-7 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-muted)] cursor-not-allowed opacity-40">›</span>
+                @endif
             </div>
         </div>
     </div>
@@ -249,6 +296,8 @@
                     name="nik" 
                     required 
                     placeholder="Contoh: EMP-1010" 
+                    oninvalid="this.setCustomValidity('NIK wajib diisi.')" 
+                    oninput="this.setCustomValidity('')" 
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
             </div>
@@ -262,6 +311,8 @@
                     name="nama" 
                     required 
                     placeholder="Contoh: Rani Kusumawati" 
+                    oninvalid="this.setCustomValidity('Nama karyawan wajib diisi.')" 
+                    oninput="this.setCustomValidity('')" 
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
             </div>
@@ -275,6 +326,8 @@
                     name="jabatan" 
                     required 
                     placeholder="Contoh: Spesialis SDM" 
+                    oninvalid="this.setCustomValidity('Jabatan wajib diisi.')" 
+                    oninput="this.setCustomValidity('')" 
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
             </div>
@@ -286,6 +339,8 @@
                 <select 
                     name="divisi" 
                     required 
+                    oninvalid="this.setCustomValidity('Divisi wajib dipilih.')" 
+                    onchange="this.setCustomValidity('')" 
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
                     <option value="Logistik">Logistik</option>
@@ -300,14 +355,14 @@
                 <label class="block text-sm font-semibold text-[var(--text)] mb-1">
                     Status kerja <span class="text-[var(--danger-solid)]">*</span>
                 </label>
-                <select 
-                    name="status_kerja" 
-                    required 
-                    class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
+                <input type="hidden" name="status_kerja" value="aktif">
+                <input 
+                    type="text" 
+                    value="Aktif" 
+                    readonly 
+                    tabindex="-1"
+                    class="w-full h-[40px] px-3 text-sm bg-[var(--surface-2)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] cursor-not-allowed focus:outline-none select-none font-medium"
                 >
-                    <option value="aktif">Aktif</option>
-                    <option value="nonaktif">Nonaktif</option>
-                </select>
             </div>
 
             <div class="pt-4 flex items-center justify-end gap-3 border-t border-[var(--line)]">
@@ -351,6 +406,8 @@
                     id="edit-nik"
                     name="nik" 
                     required 
+                    oninvalid="this.setCustomValidity('NIK wajib diisi.')" 
+                    oninput="this.setCustomValidity('')" 
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
             </div>
@@ -364,6 +421,8 @@
                     id="edit-nama"
                     name="nama" 
                     required 
+                    oninvalid="this.setCustomValidity('Nama karyawan wajib diisi.')" 
+                    oninput="this.setCustomValidity('')" 
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
             </div>
@@ -377,6 +436,8 @@
                     id="edit-jabatan"
                     name="jabatan" 
                     required 
+                    oninvalid="this.setCustomValidity('Jabatan wajib diisi.')" 
+                    oninput="this.setCustomValidity('')" 
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
             </div>
@@ -389,6 +450,8 @@
                     id="edit-divisi"
                     name="divisi" 
                     required 
+                    oninvalid="this.setCustomValidity('Divisi wajib dipilih.')" 
+                    onchange="this.setCustomValidity('')" 
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
                     <option value="Logistik">Logistik</option>
@@ -407,6 +470,8 @@
                     id="edit-status"
                     name="status_kerja" 
                     required 
+                    oninvalid="this.setCustomValidity('Status kerja wajib dipilih.')" 
+                    onchange="this.setCustomValidity('')" 
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
                     <option value="aktif">Aktif</option>
