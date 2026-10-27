@@ -27,6 +27,8 @@ Route::get('/users', [AuthController::class, 'users']);
 |    (Diselaraskan antara /api/employees/* dan /api/karyawan/*)
 |--------------------------------------------------------------------------
 */
+Route::get('/employees/me', [AuthController::class, 'me']);
+Route::get('/karyawan/me', [AuthController::class, 'me']);
 Route::get('/employees/active', [EmployeeController::class, 'active']);
 Route::get('/employees/aktif', [EmployeeController::class, 'active']);
 Route::get('/karyawan/aktif', [EmployeeController::class, 'active']);

@@ -210,12 +210,24 @@ class AuthController extends Controller
         $user->save();
         $user->load('employee');
 
+        $emp = $user->employee;
+
         return response()->json([
             'success' => true,
             'message' => 'Login berhasil.',
+            // Top-level fields untuk kompatibilitas langsung M13-FE
+            'token' => $token,
+            'role' => $user->role,
+            'employee_id' => $user->employee_id,
+            'name' => $emp->nama ?? $user->name,
+            'nik' => $emp->nik ?? null,
             'data' => [
                 'token' => $token,
                 'token_type' => 'Bearer',
+                'role' => $user->role,
+                'employee_id' => $user->employee_id,
+                'name' => $emp->nama ?? $user->name,
+                'nik' => $emp->nik ?? null,
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
@@ -223,7 +235,7 @@ class AuthController extends Controller
                     'role' => $user->role,
                     'is_hr' => $user->isHr(),
                     'employee_id' => $user->employee_id,
-                    'employee' => $user->employee,
+                    'employee' => $emp,
                 ],
             ],
         ], 200);
@@ -244,19 +256,31 @@ class AuthController extends Controller
             ], 401);
         }
 
-        return response()->json([
+        $emp = $auth['user']->employee ?? ($auth['employee_id'] ? Employee::find($auth['employee_id']) : null);
+        $empId = $emp->id ?? $auth['employee_id'];
+
+        $profile = [
+            'id' => $empId ? (int) $empId : (int) $auth['user_id'],
+            'employee_id' => $empId ? (int) $empId : null,
+            'user_id' => $auth['user_id'],
+            'nama' => $emp->nama ?? ($auth['user']->name ?? null),
+            'name' => $emp->nama ?? ($auth['user']->name ?? null),
+            'email' => $auth['user']->email ?? null,
+            'jabatan' => $emp->jabatan ?? null,
+            'divisi' => $emp->divisi ?? null,
+            'nik' => $emp->nik ?? null,
+            'status_kerja' => $emp->status_kerja ?? 'aktif',
+            'role' => $auth['role'],
+            'is_hr' => $auth['is_hr'],
+            'employee' => $emp,
+        ];
+
+        return response()->json(array_merge([
             'success' => true,
             'message' => 'Profil pengguna berhasil diambil.',
-            'data' => [
-                'user_id' => $auth['user_id'],
-                'name' => $auth['user']->name ?? null,
-                'email' => $auth['user']->email ?? null,
-                'role' => $auth['role'],
-                'is_hr' => $auth['is_hr'],
-                'employee_id' => $auth['employee_id'],
-                'employee' => $auth['user']->employee ?? ($auth['employee_id'] ? Employee::find($auth['employee_id']) : null),
-            ],
-        ], 200);
+        ], $profile, [
+            'data' => $profile,
+        ]), 200);
     }
 
     /**
