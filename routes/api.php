@@ -48,7 +48,7 @@ Route::patch('/karyawan/{id}/deactivate', [EmployeeController::class, 'deactivat
 |    - POST & PUT/PATCH: Hanya HR
 |--------------------------------------------------------------------------
 */
-Route::apiResource('employees', EmployeeController::class)->except(['destroy']);
-Route::apiResource('karyawan', EmployeeController::class)->parameters([
+Route::apiResource('employees', EmployeeController::class)->names('api.employees')->except(['destroy']);
+Route::apiResource('karyawan', EmployeeController::class)->names('api.karyawan')->parameters([
     'karyawan' => 'employee',
 ])->except(['destroy']);

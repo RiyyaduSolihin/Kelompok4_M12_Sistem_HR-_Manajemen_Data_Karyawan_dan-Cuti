@@ -20,4 +20,5 @@ Route::get('/karyawan/aktif', [\App\Http\Controllers\Api\EmployeeController::cla
 
 // Halaman Dokumentasi API (Swagger UI)
 Route::view('/api/documentation', 'swagger')->name('swagger.docs');
+Route::view('/api/docs', 'swagger');
 Route::view('/docs', 'swagger');

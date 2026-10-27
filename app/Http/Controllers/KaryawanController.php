@@ -38,9 +38,13 @@ class KaryawanController extends Controller
             'status_kerja.required' => 'Status kerja wajib diisi.',
         ]);
 
+        $validated['name'] = $validated['nama'];
+        $validated['position'] = $validated['jabatan'];
+        $validated['department'] = $validated['divisi'];
+
         Employee::create($validated);
 
-        return redirect()->route('employees.index')->with('success', 'Karyawan baru berhasil ditambahkan.');
+        return redirect('/')->with('success', 'Karyawan baru berhasil ditambahkan.');
     }
 
     /**
@@ -65,9 +69,13 @@ class KaryawanController extends Controller
             'status_kerja.required' => 'Status kerja wajib diisi.',
         ]);
 
+        $validated['name'] = $validated['nama'];
+        $validated['position'] = $validated['jabatan'];
+        $validated['department'] = $validated['divisi'];
+
         $employee->update($validated);
 
-        return redirect()->route('employees.index')->with('success', "Data karyawan {$employee->nama} berhasil diperbarui.");
+        return redirect('/')->with('success', "Data karyawan {$employee->nama} berhasil diperbarui.");
     }
 
     /**
@@ -88,7 +96,7 @@ class KaryawanController extends Controller
         $karyawan->tanggal_berhenti = $request->tanggal_berhenti;
         $karyawan->save();
 
-        if ($request->wantsJson()) {
+        if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
                 'success' => true,
                 'message' => 'Karyawan berhasil dinonaktifkan dan riwayat kepegawaian tetap tersimpan.',
@@ -96,7 +104,7 @@ class KaryawanController extends Controller
             ], 200);
         }
 
-        return redirect()->route('employees.index')->with('success', "Karyawan {$karyawan->nama} berhasil dinonaktifkan.");
+        return redirect('/')->with('success', "Karyawan {$karyawan->nama} berhasil dinonaktifkan.");
     }
 
     /**
