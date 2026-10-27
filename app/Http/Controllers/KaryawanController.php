@@ -14,7 +14,7 @@ class KaryawanController extends Controller
      */
     public function index()
     {
-        $employees = Employee::orderBy('id', 'asc')->get();
+        $employees = Employee::orderBy('id', 'asc')->paginate(11);
         return view('employees.index', compact('employees'));
     }
 
