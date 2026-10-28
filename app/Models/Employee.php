@@ -24,6 +24,48 @@ class Employee extends Model
         'tanggal_berhenti',
     ];
 
+    protected $appends = [
+        'nama',
+        'jabatan',
+        'divisi',
+        'status_kerja',
+    ];
+
+    public function getNamaAttribute($value): ?string
+    {
+        return $value ?? ($this->attributes['name'] ?? null);
+    }
+
+    public function getNameAttribute($value): ?string
+    {
+        return $value ?? ($this->attributes['nama'] ?? null);
+    }
+
+    public function getJabatanAttribute($value): ?string
+    {
+        return $value ?? ($this->attributes['position'] ?? null);
+    }
+
+    public function getPositionAttribute($value): ?string
+    {
+        return $value ?? ($this->attributes['jabatan'] ?? null);
+    }
+
+    public function getDivisiAttribute($value): ?string
+    {
+        return $value ?? ($this->attributes['department'] ?? null);
+    }
+
+    public function getDepartmentAttribute($value): ?string
+    {
+        return $value ?? ($this->attributes['divisi'] ?? null);
+    }
+
+    public function getStatusKerjaAttribute($value): string
+    {
+        return $value ?? 'aktif';
+    }
+
     /**
      * Relasi ke akun User (1 karyawan dapat memiliki 1 akun login)
      */

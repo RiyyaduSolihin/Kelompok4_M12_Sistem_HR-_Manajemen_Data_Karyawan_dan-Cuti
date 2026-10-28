@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
+use App\Support\DatabaseSchemaGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -77,14 +78,26 @@ class EmployeeController extends Controller
             ], 200);
         }
 
-        // Jika HR: Boleh mengambil seluruh data karyawan
-        $query = Employee::query();
+        $employees = DatabaseSchemaGuard::run(function () use ($statusFilter) {
+            $query = Employee::query();
 
-        if ($statusFilter) {
-            $query->where('status_kerja', $statusFilter);
-        }
+            if ($statusFilter) {
+                $query->where('status_kerja', $statusFilter);
+            }
 
-        $employees = $query->orderBy('id', 'asc')->get();
+            $list = $query->orderBy('id', 'asc')->get();
+
+            if ($list->isNotEmpty() && ! array_key_exists('nama', $list->first()->getAttributes())) {
+                DatabaseSchemaGuard::ensureSchema(true);
+                $query = Employee::query();
+                if ($statusFilter) {
+                    $query->where('status_kerja', $statusFilter);
+                }
+                $list = $query->orderBy('id', 'asc')->get();
+            }
+
+            return $list;
+        });
 
         return response()->json([
             'success' => true,
@@ -117,9 +130,9 @@ class EmployeeController extends Controller
             ], 403);
         }
 
-        $karyawanAktif = Employee::where('status_kerja', 'aktif')
+        $karyawanAktif = DatabaseSchemaGuard::run(fn () => Employee::where('status_kerja', 'aktif')
             ->orderBy('id', 'asc')
-            ->get();
+            ->get());
 
         return response()->json([
             'success' => true,
@@ -227,7 +240,7 @@ class EmployeeController extends Controller
         $validated['position'] = $validated['jabatan'];
         $validated['department'] = $validated['divisi'];
 
-        $employee = Employee::create($validated);
+        $employee = DatabaseSchemaGuard::run(fn () => Employee::create($validated));
 
         return response()->json([
             'success' => true,
@@ -303,7 +316,7 @@ class EmployeeController extends Controller
         $validated['position'] = $validated['jabatan'];
         $validated['department'] = $validated['divisi'];
 
-        $employee->update($validated);
+        DatabaseSchemaGuard::run(fn () => $employee->update($validated));
 
         return response()->json([
             'success' => true,
@@ -358,9 +371,11 @@ class EmployeeController extends Controller
             ], 404);
         }
 
-        $employee->status_kerja = 'nonaktif';
-        $employee->tanggal_berhenti = $request->tanggal_berhenti;
-        $employee->save();
+        DatabaseSchemaGuard::run(function () use ($employee, $request) {
+            $employee->status_kerja = 'nonaktif';
+            $employee->tanggal_berhenti = $request->tanggal_berhenti;
+            $employee->save();
+        });
 
         return response()->json([
             'success' => true,

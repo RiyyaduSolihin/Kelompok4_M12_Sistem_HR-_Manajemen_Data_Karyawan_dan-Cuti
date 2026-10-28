@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\User;
+use App\Support\DatabaseSchemaGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -65,7 +66,7 @@ class AuthController extends Controller
             }
 
             // 2. Cek jika token disimpan langsung di kolom users.api_token
-            $user = User::with('employee')->where('api_token', $bearer)->first();
+            $user = DatabaseSchemaGuard::run(fn () => User::with('employee')->where('api_token', $bearer)->first());
             if ($user) {
                 return [
                     'authenticated' => true,
@@ -163,16 +164,32 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $user = null;
-
-        if ($request->filled('email')) {
-            $user = User::with('employee')->where('email', $request->email)->first();
-        } elseif ($request->filled('nik')) {
-            $employee = Employee::where('nik', $request->nik)->first();
-            if ($employee) {
-                $user = User::with('employee')->where('employee_id', $employee->id)->first();
+        $user = DatabaseSchemaGuard::run(function () use ($request) {
+            $found = null;
+            if ($request->filled('email')) {
+                $found = User::with('employee')->where('email', $request->email)->first();
+            } elseif ($request->filled('nik')) {
+                $employee = Employee::where('nik', $request->nik)->first();
+                if ($employee) {
+                    $found = User::with('employee')->where('employee_id', $employee->id)->first();
+                }
             }
-        }
+
+            // Jika user tidak ditemukan atau password kosong (akibat tabel users di-reset modul lain), pulihkan skema & akun demo
+            if (! $found || empty($found->password)) {
+                DatabaseSchemaGuard::ensureSchema(true);
+                if ($request->filled('email')) {
+                    $found = User::with('employee')->where('email', $request->email)->first();
+                } elseif ($request->filled('nik')) {
+                    $employee = Employee::where('nik', $request->nik)->first();
+                    if ($employee) {
+                        $found = User::with('employee')->where('employee_id', $employee->id)->first();
+                    }
+                }
+            }
+
+            return $found;
+        });
 
         if (! $user) {
             return response()->json([
@@ -206,9 +223,11 @@ class AuthController extends Controller
         }
 
         $token = self::generateToken($user);
-        $user->api_token = $token;
-        $user->save();
-        $user->load('employee');
+        DatabaseSchemaGuard::run(function () use ($user, $token) {
+            $user->api_token = $token;
+            $user->save();
+            $user->load('employee');
+        });
 
         $emp = $user->employee;
 

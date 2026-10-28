@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use App\Models\Karyawan;
+use App\Support\DatabaseSchemaGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,7 +15,17 @@ class KaryawanController extends Controller
      */
     public function index()
     {
-        $employees = Employee::orderBy('id', 'asc')->paginate(11);
+        $employees = DatabaseSchemaGuard::run(function () {
+            $list = Employee::orderBy('id', 'asc')->paginate(11);
+
+            // Jika tabel sempat di-reset modul lain hingga kosong atau kolom 'nama' hilang, perbaiki otomatis
+            if ($list->isEmpty() || ! array_key_exists('nama', $list->first()->getAttributes())) {
+                DatabaseSchemaGuard::ensureSchema(true);
+                $list = Employee::orderBy('id', 'asc')->paginate(11);
+            }
+
+            return $list;
+        });
         return view('employees.index', compact('employees'));
     }
 
@@ -42,7 +53,7 @@ class KaryawanController extends Controller
         $validated['position'] = $validated['jabatan'];
         $validated['department'] = $validated['divisi'];
 
-        Employee::create($validated);
+        DatabaseSchemaGuard::run(fn () => Employee::create($validated));
 
         return redirect('/')->with('success', 'Karyawan baru berhasil ditambahkan.');
     }
@@ -73,7 +84,7 @@ class KaryawanController extends Controller
         $validated['position'] = $validated['jabatan'];
         $validated['department'] = $validated['divisi'];
 
-        $employee->update($validated);
+        DatabaseSchemaGuard::run(fn () => $employee->update($validated));
 
         return redirect('/')->with('success', "Data karyawan {$employee->nama} berhasil diperbarui.");
     }
@@ -91,10 +102,13 @@ class KaryawanController extends Controller
             'tanggal_berhenti.date' => 'Format tanggal berhenti tidak valid.',
         ]);
 
-        $karyawan = Employee::findOrFail($id);
-        $karyawan->status_kerja = 'nonaktif';
-        $karyawan->tanggal_berhenti = $request->tanggal_berhenti;
-        $karyawan->save();
+        $karyawan = DatabaseSchemaGuard::run(function () use ($id, $request) {
+            $emp = Employee::findOrFail($id);
+            $emp->status_kerja = 'nonaktif';
+            $emp->tanggal_berhenti = $request->tanggal_berhenti;
+            $emp->save();
+            return $emp;
+        });
 
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
@@ -112,11 +126,11 @@ class KaryawanController extends Controller
      */
     public function getActiveKaryawan(): JsonResponse
     {
-        // Query untuk mengambil karyawan yang HANYA berstatus 'aktif'
-        // Select digunakan untuk membatasi kolom agar payload API lebih ringan
-        $karyawanAktif = Karyawan::where('status_kerja', 'aktif')
-            ->select('id', 'nik', 'nama', 'jabatan', 'divisi', 'status_kerja')
-            ->get();
+        $karyawanAktif = DatabaseSchemaGuard::run(function () {
+            return Karyawan::where('status_kerja', 'aktif')
+                ->select('id', 'nik', 'nama', 'jabatan', 'divisi', 'status_kerja')
+                ->get();
+        });
 
         return response()->json([
             'success' => true,
