@@ -65,7 +65,37 @@ class DatabaseSchemaGuard
 
     private static function ensurePostgresSchema(): void
     {
-        // 1. Pastikan seluruh kolom M12, M13 & M14 ada pada tabel employees
+        // 1. Pastikan tabel divisions dan positions (M12-US6) tersedia
+        DB::statement("
+            CREATE TABLE IF NOT EXISTS divisions (
+                id BIGSERIAL PRIMARY KEY,
+                kode_divisi VARCHAR(20) UNIQUE NULL,
+                nama_divisi VARCHAR(100) UNIQUE NOT NULL,
+                name VARCHAR(100) NULL,
+                deskripsi TEXT NULL,
+                created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        ");
+
+        DB::statement("
+            CREATE TABLE IF NOT EXISTS positions (
+                id BIGSERIAL PRIMARY KEY,
+                division_id BIGINT NOT NULL REFERENCES divisions(id) ON DELETE RESTRICT,
+                nama_jabatan VARCHAR(100) UNIQUE NOT NULL,
+                name VARCHAR(100) NULL,
+                level_jabatan VARCHAR(50) DEFAULT 'Staff',
+                parent_position_id BIGINT NULL REFERENCES positions(id) ON DELETE SET NULL,
+                atasan VARCHAR(100) NULL,
+                deskripsi TEXT NULL,
+                created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        ");
+
+        // 2. Pastikan seluruh kolom M12, M13 & M14 ada pada tabel employees
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS division_id BIGINT NULL REFERENCES divisions(id) ON DELETE RESTRICT");
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS position_id BIGINT NULL REFERENCES positions(id) ON DELETE RESTRICT");
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS nama VARCHAR(100)");
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS jabatan VARCHAR(50)");
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS divisi VARCHAR(50)");

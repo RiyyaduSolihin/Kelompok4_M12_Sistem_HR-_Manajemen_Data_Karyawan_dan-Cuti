@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Employee extends Model
@@ -20,6 +21,8 @@ class Employee extends Model
         'position',
         'divisi',
         'department',
+        'division_id',
+        'position_id',
         'status_kerja',
         'tanggal_berhenti',
     ];
@@ -72,5 +75,21 @@ class Employee extends Model
     public function user(): HasOne
     {
         return $this->hasOne(User::class, 'employee_id');
+    }
+
+    /**
+     * Relasi ke Master Divisi (M12-US6)
+     */
+    public function division(): BelongsTo
+    {
+        return $this->belongsTo(Division::class, 'division_id');
+    }
+
+    /**
+     * Relasi ke Master Jabatan (M12-US6)
+     */
+    public function positionRelation(): BelongsTo
+    {
+        return $this->belongsTo(Position::class, 'position_id');
     }
 }
