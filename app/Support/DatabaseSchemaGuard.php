@@ -275,46 +275,49 @@ class DatabaseSchemaGuard
     private static function ensureDefaultDemoAccounts(): void
     {
         $defaultPasswordHash = Hash::make('password123');
-        $firstEmp = DB::table('employees')->orderBy('id', 'asc')->first();
-        $secondEmp = DB::table('employees')->where('status_kerja', 'aktif')->orderBy('id', 'asc')->skip(1)->first() ?? $firstEmp;
+        $hrEmp = DB::table('employees')->where('nik', 'EMP-1001')->first()
+            ?? DB::table('employees')->orderBy('id', 'asc')->first();
+        $staffEmp = DB::table('employees')->where('nik', 'EMP-1002')->first()
+            ?? DB::table('employees')->where('status_kerja', 'aktif')->orderBy('id', 'asc')->skip(1)->first()
+            ?? $hrEmp;
 
-        // Pastikan akun HR memiliki password dan employee_id
+        // Pastikan akun HR (hr@araya.com) terhubung ke karyawan ID 1 (EMP-1001)
         $hrUser = DB::table('users')->where('email', 'hr@araya.com')->first();
-        if (! $hrUser) {
+        if (! $hrUser && $hrEmp) {
             DB::table('users')->insert([
-                'name' => $firstEmp->nama ?? $firstEmp->name ?? 'Rani K. (Admin HR)',
+                'name' => $hrEmp->nama ?? $hrEmp->name ?? 'Rani Kusumawati',
                 'email' => 'hr@araya.com',
                 'password' => $defaultPasswordHash,
                 'role' => 'Admin HR',
-                'employee_id' => $firstEmp->id ?? null,
+                'employee_id' => $hrEmp->id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-        } elseif (empty($hrUser->password) || empty($hrUser->employee_id)) {
+        } elseif ($hrUser && (empty($hrUser->password) || empty($hrUser->employee_id))) {
             DB::table('users')->where('id', $hrUser->id)->update([
                 'password' => $hrUser->password ?: $defaultPasswordHash,
                 'role' => 'Admin HR',
-                'employee_id' => $hrUser->employee_id ?: ($firstEmp->id ?? null),
+                'employee_id' => $hrUser->employee_id ?: ($hrEmp->id ?? null),
             ]);
         }
 
-        // Pastikan akun Employee demo (andi@araya.com) memiliki password dan employee_id
+        // Pastikan akun Employee demo (andi@araya.com) terhubung ke karyawan ID 2 (EMP-1002)
         $empUser = DB::table('users')->where('email', 'andi@araya.com')->first();
-        if (! $empUser) {
+        if (! $empUser && $staffEmp) {
             DB::table('users')->insert([
-                'name' => $secondEmp->nama ?? $secondEmp->name ?? 'Andi Pratama',
+                'name' => $staffEmp->nama ?? $staffEmp->name ?? 'Andi Pratama',
                 'email' => 'andi@araya.com',
                 'password' => $defaultPasswordHash,
                 'role' => 'Employee',
-                'employee_id' => $secondEmp->id ?? null,
+                'employee_id' => $staffEmp->id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-        } elseif (empty($empUser->password) || empty($empUser->employee_id)) {
+        } elseif ($empUser && (empty($empUser->password) || empty($empUser->employee_id))) {
             DB::table('users')->where('id', $empUser->id)->update([
                 'password' => $empUser->password ?: $defaultPasswordHash,
                 'role' => 'Employee',
-                'employee_id' => $empUser->employee_id ?: ($secondEmp->id ?? null),
+                'employee_id' => $empUser->employee_id ?: ($staffEmp->id ?? null),
             ]);
         }
     }
