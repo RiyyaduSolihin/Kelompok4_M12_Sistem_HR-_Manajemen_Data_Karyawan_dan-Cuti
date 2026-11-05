@@ -45,11 +45,19 @@
             openapi: "3.0.3",
             info: {
                 title: "API Sistem HR - Modul M12 (Login, RBAC HR vs Employee, & Kontrak Data)",
-                version: "2.0.0",
+                version: "2.1.0",
                 description: "Dokumentasi RESTful API terpadu yang menyelaraskan `/api/employees` dan `/api/karyawan` dengan kontrol akses berbasis role (**RBAC Lintas 4 Modul**):\n\n" +
-                    "### Akun Uji Coba Default (Database Neon):\n" +
-                    "- **Akun HR (`Admin HR`)**: Email `hr@araya.com` | Password `password123` (Bisa akses seluruh karyawan, karyawan aktif, tambah/edit, dan deaktivasi)\n" +
-                    "- **Akun Karyawan Biasa (`Employee`)**: Email `andi@araya.com` | Password `password123` (Hanya bisa melihat data kepegawaian miliknya sendiri)\n\n" +
+                    "### Daftar Akun Seeder Terbaru (Database Neon — ID 1 s/d 8, Password: `password123`):\n" +
+                    "| ID (`user.id` = `employee_id`) | NIK | Nama | Email | Role | Jabatan | Divisi | Status |\n" +
+                    "| :---: | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n" +
+                    "| **1** | `EMP-1001` | Rani Kusumawati | `hr@araya.com` | **Admin HR** | HR Manager | SDM | `aktif` |\n" +
+                    "| **2** | `EMP-1002` | Andi Pratama | `andi@araya.com` | **Employee** | Software Engineer | Teknologi Informasi | `aktif` |\n" +
+                    "| **3** | `EMP-1003` | Sinta Maharani | `sinta@araya.com` | **Employee** | Staff Keuangan | Keuangan | `aktif` |\n" +
+                    "| **4** | `EMP-1004` | Budi Santoso | `budi@araya.com` | **Employee** | Analis Data | Teknologi Informasi | `aktif` |\n" +
+                    "| **5** | `EMP-1005` | Lestari Wulandari | `lestari@araya.com` | **Employee** | Spesialis Rekrutmen | SDM | `aktif` |\n" +
+                    "| **6** | `EMP-1006` | Dewi Anggraini | `dewi@araya.com` | **Employee** | Staff Operasional | Operasional | `aktif` |\n" +
+                    "| **7** | `EMP-1007` | Rizky Pratama | `rizky@araya.com` | **Employee** | Admin Gudang | Logistik | `aktif` |\n" +
+                    "| **8** | `EMP-1008` | Ahmad Fauzi | `ahmad@araya.com` | **Employee** | Spesialis Logistik | Logistik | `nonaktif` |\n\n" +
                     "### Cara Autentikasi di Swagger / Modul Lain:\n" +
                     "1. Jalankan **`POST /api/login`**, salin nilai `token`, lalu klik tombol hijau **`Authorize`** di kanan atas dan masukkan token tersebut, **ATAU**\n" +
                     "2. Gunakan Header **`X-User-Role`** (`Admin HR` atau `Employee`) dan **`X-Employee-Id`**."
@@ -241,10 +249,10 @@
                         type: "object",
                         required: ["nik", "nama", "jabatan", "divisi", "status_kerja"],
                         properties: {
-                            nik: { type: "string", example: "2026005" },
+                            nik: { type: "string", example: "EMP-1009" },
                             nama: { type: "string", example: "Siti Aminah" },
-                            jabatan: { type: "string", example: "Analis SDM" },
-                            divisi: { type: "string", example: "HRD" },
+                            jabatan: { type: "string", example: "Spesialis SDM" },
+                            divisi: { type: "string", example: "SDM" },
                             status_kerja: { type: "string", enum: ["aktif", "nonaktif"], example: "aktif" }
                         }
                     }
