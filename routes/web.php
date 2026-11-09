@@ -15,6 +15,9 @@ Route::put('/karyawan/{id}', [KaryawanController::class, 'update'])->name('karya
 // Menonaktifkan karyawan
 Route::patch('/karyawan/{id}/deactivate', [KaryawanController::class, 'deactivate'])->name('karyawan.deactivate');
 
+// Mengaktifkan kembali karyawan yang nonaktif
+Route::patch('/karyawan/{id}/activate', [KaryawanController::class, 'activate'])->name('karyawan.activate');
+
 // Endpoint kontrak data khusus karyawan aktif (dikonsumsi M13 & M14 — Hanya HR)
 Route::get('/karyawan/aktif', [\App\Http\Controllers\Api\EmployeeController::class, 'active']);
 

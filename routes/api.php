@@ -36,11 +36,17 @@ Route::get('/karyawan/active', [EmployeeController::class, 'active']);
 
 /*
 |--------------------------------------------------------------------------
-| 3. Endpoint Deaktivasi Karyawan — HANYA HR (Poin 6)
+| 3. Endpoint Deaktivasi, Aktivasi Kembali & Riwayat Status — HANYA HR (Poin 6)
 |--------------------------------------------------------------------------
 */
 Route::patch('/employees/{id}/deactivate', [EmployeeController::class, 'deactivate']);
 Route::patch('/karyawan/{id}/deactivate', [EmployeeController::class, 'deactivate']);
+
+Route::patch('/employees/{id}/activate', [EmployeeController::class, 'activate']);
+Route::patch('/karyawan/{id}/activate', [EmployeeController::class, 'activate']);
+
+Route::get('/employees/{id}/status-histories', [EmployeeController::class, 'statusHistories']);
+Route::get('/karyawan/{id}/status-histories', [EmployeeController::class, 'statusHistories']);
 
 /*
 |--------------------------------------------------------------------------

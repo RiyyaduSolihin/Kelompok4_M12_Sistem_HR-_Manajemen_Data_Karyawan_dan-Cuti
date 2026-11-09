@@ -93,20 +93,50 @@ class DatabaseSchemaGuard
             )
         ");
 
-        // 2. Pastikan seluruh kolom M12, M13 & M14 ada pada tabel employees
+        // 2. Pastikan seluruh kolom M12, M13 & M14 + KTP + tanggal_aktif ada pada tabel employees
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS division_id BIGINT NULL REFERENCES divisions(id) ON DELETE RESTRICT");
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS position_id BIGINT NULL REFERENCES positions(id) ON DELETE RESTRICT");
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS nama VARCHAR(100)");
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS jabatan VARCHAR(50)");
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS divisi VARCHAR(50)");
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS status_kerja VARCHAR(20) DEFAULT 'aktif'");
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS tanggal_aktif DATE NULL");
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS tanggal_berhenti DATE NULL");
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS nik_ktp VARCHAR(20) NULL");
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS tempat_lahir VARCHAR(100) NULL");
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS tanggal_lahir DATE NULL");
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS jenis_kelamin VARCHAR(20) NULL");
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS golongan_darah VARCHAR(5) NULL");
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS alamat TEXT NULL");
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS rt_rw VARCHAR(20) NULL");
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS kelurahan_desa VARCHAR(100) NULL");
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS kecamatan VARCHAR(100) NULL");
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS kabupaten_kota VARCHAR(100) NULL");
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS provinsi VARCHAR(100) NULL");
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS agama VARCHAR(30) NULL");
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS status_perkawinan VARCHAR(30) NULL");
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS pekerjaan_ktp VARCHAR(100) NULL");
+        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS kewarganegaraan VARCHAR(10) DEFAULT 'WNI'");
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS name VARCHAR(100)");
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS position VARCHAR(50)");
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS department VARCHAR(50)");
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'aktif'");
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP");
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP");
+
+        // Tabel riwayat perubahan status aktif / nonaktif karyawan
+        DB::statement("
+            CREATE TABLE IF NOT EXISTS employee_status_histories (
+                id BIGSERIAL PRIMARY KEY,
+                employee_id BIGINT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+                status VARCHAR(20) NOT NULL,
+                tanggal_efektif DATE NOT NULL,
+                keterangan VARCHAR(255) NULL,
+                changed_by VARCHAR(100) NULL,
+                created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        ");
 
         // Lepas constraint NOT NULL pada semua kolom opsional lintas modul (kecuali id dan nik)
         DB::statement("
