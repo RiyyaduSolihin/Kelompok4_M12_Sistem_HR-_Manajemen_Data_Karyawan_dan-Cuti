@@ -234,6 +234,47 @@
                             "403": { description: "Akses ditolak: Hanya HR yang boleh menonaktifkan karyawan" }
                         }
                     }
+                },
+                "/api/employees/{id}/activate": {
+                    patch: {
+                        tags: ["4. Deaktivasi Karyawan (Hanya HR)"],
+                        summary: "Mengaktifkan kembali karyawan yang nonaktif & mencatat tanggal aktif baru ke riwayat — HANYA HR",
+                        description: "Identik dengan `PATCH /api/karyawan/{id}/activate`. Setiap kali karyawan diaktifkan kembali setelah dinonaktifkan, tanggal aktif baru tercatat di tabel `employee_status_histories` tanpa menghapus riwayat tanggal berhenti sebelumnya.",
+                        parameters: [
+                            { name: "id", in: "path", required: true, schema: { type: "integer", example: 8 } }
+                        ],
+                        requestBody: {
+                            required: false,
+                            content: {
+                                "application/json": {
+                                    schema: {
+                                        type: "object",
+                                        properties: {
+                                            tanggal_aktif: { type: "string", format: "date", example: "2026-11-10" },
+                                            keterangan: { type: "string", example: "Karyawan diaktifkan kembali setelah perpanjangan kontrak." }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        responses: {
+                            "200": { description: "Karyawan berhasil diaktifkan kembali dan tercatat di riwayat" },
+                            "403": { description: "Akses ditolak: Hanya HR yang boleh mengaktifkan karyawan" }
+                        }
+                    }
+                },
+                "/api/employees/{id}/status-histories": {
+                    get: {
+                        tags: ["4. Deaktivasi Karyawan (Hanya HR)"],
+                        summary: "Melihat riwayat tanggal status aktif & nonaktif karyawan",
+                        description: "Identik dengan `GET /api/karyawan/{id}/status-histories`.",
+                        parameters: [
+                            { name: "id", in: "path", required: true, schema: { type: "integer", example: 7 } }
+                        ],
+                        responses: {
+                            "200": { description: "Riwayat status aktif/nonaktif karyawan berhasil diambil" }
+                        }
+                    }
                 }
             },
             components: {
@@ -249,11 +290,27 @@
                         type: "object",
                         required: ["nik", "nama", "jabatan", "divisi", "status_kerja"],
                         properties: {
-                            nik: { type: "string", example: "EMP-1009" },
-                            nama: { type: "string", example: "Siti Aminah" },
+                            nik: { type: "string", example: "EMP-1009", description: "Hanya huruf, angka, dan tanda hubung (-). Menolak simbol/karakter aneh." },
+                            nama: { type: "string", example: "Siti Aminah", description: "Hanya huruf, spasi, titik, koma, dan petik. Menolak angka & karakter aneh." },
                             jabatan: { type: "string", example: "Spesialis SDM" },
                             divisi: { type: "string", example: "SDM" },
-                            status_kerja: { type: "string", enum: ["aktif", "nonaktif"], example: "aktif" }
+                            status_kerja: { type: "string", enum: ["aktif", "nonaktif"], example: "aktif" },
+                            tanggal_aktif: { type: "string", format: "date", example: "2026-11-09" },
+                            nik_ktp: { type: "string", example: "3273015505990009", description: "16 digit angka sesuai KTP" },
+                            tempat_lahir: { type: "string", example: "Bandung" },
+                            tanggal_lahir: { type: "string", format: "date", example: "1999-05-15" },
+                            jenis_kelamin: { type: "string", enum: ["Laki-laki", "Perempuan"], example: "Perempuan" },
+                            golongan_darah: { type: "string", enum: ["A", "B", "AB", "O", "-"], example: "O" },
+                            alamat: { type: "string", example: "Jl. Ir. H. Juanda No. 120" },
+                            rt_rw: { type: "string", example: "003/005" },
+                            kelurahan_desa: { type: "string", example: "Lebakgede" },
+                            kecamatan: { type: "string", example: "Coblong" },
+                            kabupaten_kota: { type: "string", example: "Kota Bandung" },
+                            provinsi: { type: "string", example: "Jawa Barat" },
+                            agama: { type: "string", example: "Islam" },
+                            status_perkawinan: { type: "string", example: "Belum Kawin" },
+                            pekerjaan_ktp: { type: "string", example: "Karyawan Swasta" },
+                            kewarganegaraan: { type: "string", enum: ["WNI", "WNA"], example: "WNI" }
                         }
                     }
                 }
