@@ -32,6 +32,7 @@ class DatabaseSchemaGuard
                 str_contains($msg, 'null value in column')
             ) {
                 self::ensureSchema(true);
+
                 return $callback();
             }
 
@@ -66,7 +67,7 @@ class DatabaseSchemaGuard
     private static function ensurePostgresSchema(): void
     {
         // 1. Pastikan tabel divisions dan positions (M12-US6) tersedia
-        DB::statement("
+        DB::statement('
             CREATE TABLE IF NOT EXISTS divisions (
                 id BIGSERIAL PRIMARY KEY,
                 kode_divisi VARCHAR(20) UNIQUE NULL,
@@ -76,7 +77,7 @@ class DatabaseSchemaGuard
                 created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
             )
-        ");
+        ');
 
         DB::statement("
             CREATE TABLE IF NOT EXISTS positions (
@@ -94,38 +95,39 @@ class DatabaseSchemaGuard
         ");
 
         // 2. Pastikan seluruh kolom M12, M13 & M14 + KTP + tanggal_aktif ada pada tabel employees
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS division_id BIGINT NULL REFERENCES divisions(id) ON DELETE RESTRICT");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS position_id BIGINT NULL REFERENCES positions(id) ON DELETE RESTRICT");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS nama VARCHAR(100)");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS jabatan VARCHAR(50)");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS divisi VARCHAR(50)");
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS division_id BIGINT NULL REFERENCES divisions(id) ON DELETE RESTRICT');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS position_id BIGINT NULL REFERENCES positions(id) ON DELETE RESTRICT');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS nama VARCHAR(100)');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS jabatan VARCHAR(50)');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS divisi VARCHAR(50)');
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS status_kerja VARCHAR(20) DEFAULT 'aktif'");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS tanggal_aktif DATE NULL");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS tanggal_berhenti DATE NULL");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS nik_ktp VARCHAR(20) NULL");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS tempat_lahir VARCHAR(100) NULL");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS tanggal_lahir DATE NULL");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS jenis_kelamin VARCHAR(20) NULL");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS golongan_darah VARCHAR(5) NULL");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS alamat TEXT NULL");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS rt_rw VARCHAR(20) NULL");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS kelurahan_desa VARCHAR(100) NULL");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS kecamatan VARCHAR(100) NULL");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS kabupaten_kota VARCHAR(100) NULL");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS provinsi VARCHAR(100) NULL");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS agama VARCHAR(30) NULL");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS status_perkawinan VARCHAR(30) NULL");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS pekerjaan_ktp VARCHAR(100) NULL");
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS tanggal_aktif DATE NULL');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS tanggal_berhenti DATE NULL');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS nik_ktp VARCHAR(20) NULL');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS tempat_lahir VARCHAR(100) NULL');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS tanggal_lahir DATE NULL');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS jenis_kelamin VARCHAR(20) NULL');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS golongan_darah VARCHAR(5) NULL');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS alamat TEXT NULL');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS address TEXT NULL');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS rt_rw VARCHAR(20) NULL');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS kelurahan_desa VARCHAR(100) NULL');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS kecamatan VARCHAR(100) NULL');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS kabupaten_kota VARCHAR(100) NULL');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS provinsi VARCHAR(100) NULL');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS agama VARCHAR(30) NULL');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS status_perkawinan VARCHAR(30) NULL');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS pekerjaan_ktp VARCHAR(100) NULL');
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS kewarganegaraan VARCHAR(10) DEFAULT 'WNI'");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS name VARCHAR(100)");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS position VARCHAR(50)");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS department VARCHAR(50)");
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS name VARCHAR(100)');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS position VARCHAR(50)');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS department VARCHAR(50)');
         DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'aktif'");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP");
-        DB::statement("ALTER TABLE employees ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP");
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP');
+        DB::statement('ALTER TABLE employees ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP');
 
         // Tabel riwayat perubahan status aktif / nonaktif karyawan
-        DB::statement("
+        DB::statement('
             CREATE TABLE IF NOT EXISTS employee_status_histories (
                 id BIGSERIAL PRIMARY KEY,
                 employee_id BIGINT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
@@ -136,7 +138,7 @@ class DatabaseSchemaGuard
                 created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
             )
-        ");
+        ');
 
         // Lepas constraint NOT NULL pada semua kolom opsional lintas modul (kecuali id dan nik)
         DB::statement("
@@ -194,6 +196,8 @@ class DatabaseSchemaGuard
                     NEW.department := COALESCE(NEW.department, NEW.divisi, '');
                     NEW.jabatan := COALESCE(NEW.jabatan, NEW.position, '');
                     NEW.position := COALESCE(NEW.position, NEW.jabatan, '');
+                    NEW.alamat := COALESCE(NEW.alamat, NEW.address, '');
+                    NEW.address := COALESCE(NEW.address, NEW.alamat, '');
                     NEW.status_kerja := COALESCE(
                         NEW.status_kerja,
                         CASE WHEN LOWER(COALESCE(NEW.status, '')) IN ('inactive', 'nonaktif', 'non-aktif') THEN 'nonaktif' ELSE 'aktif' END,
@@ -226,28 +230,34 @@ class DatabaseSchemaGuard
                     ELSIF NEW.status IS DISTINCT FROM OLD.status THEN
                         NEW.status_kerja := CASE WHEN LOWER(COALESCE(NEW.status, '')) IN ('inactive', 'nonaktif', 'non-aktif') THEN 'nonaktif' ELSE 'aktif' END;
                     END IF;
+
+                    IF NEW.alamat IS DISTINCT FROM OLD.alamat THEN
+                        NEW.address := NEW.alamat;
+                    ELSIF NEW.address IS DISTINCT FROM OLD.address THEN
+                        NEW.alamat := NEW.address;
+                    END IF;
                 END IF;
                 RETURN NEW;
             END;
             \$\$ LANGUAGE plpgsql;
         ");
 
-        DB::statement("DROP TRIGGER IF EXISTS trg_sync_employee_m12_m14 ON employees");
-        DB::statement("
+        DB::statement('DROP TRIGGER IF EXISTS trg_sync_employee_m12_m14 ON employees');
+        DB::statement('
             CREATE TRIGGER trg_sync_employee_m12_m14
             BEFORE INSERT OR UPDATE ON employees
             FOR EACH ROW
             EXECUTE FUNCTION sync_employee_m12_m14_columns()
-        ");
+        ');
 
         // 2. Pastikan seluruh kolom Auth M12/M13/M14 ada pada tabel users
-        DB::statement("ALTER TABLE users ADD COLUMN IF NOT EXISTS password VARCHAR(255) NULL");
+        DB::statement('ALTER TABLE users ADD COLUMN IF NOT EXISTS password VARCHAR(255) NULL');
         DB::statement("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'Employee'");
-        DB::statement("ALTER TABLE users ADD COLUMN IF NOT EXISTS employee_id BIGINT NULL");
-        DB::statement("ALTER TABLE users ADD COLUMN IF NOT EXISTS api_token VARCHAR(80) NULL");
-        DB::statement("ALTER TABLE users ADD COLUMN IF NOT EXISTS remember_token VARCHAR(100) NULL");
-        DB::statement("ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP");
-        DB::statement("ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP");
+        DB::statement('ALTER TABLE users ADD COLUMN IF NOT EXISTS employee_id BIGINT NULL');
+        DB::statement('ALTER TABLE users ADD COLUMN IF NOT EXISTS api_token VARCHAR(80) NULL');
+        DB::statement('ALTER TABLE users ADD COLUMN IF NOT EXISTS remember_token VARCHAR(100) NULL');
+        DB::statement('ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP');
+        DB::statement('ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP');
 
         DB::statement("
             DO \$\$
@@ -297,6 +307,12 @@ class DatabaseSchemaGuard
                 }
                 if (! Schema::hasColumn('employees', 'department')) {
                     $table->string('department', 50)->nullable();
+                }
+                if (! Schema::hasColumn('employees', 'alamat')) {
+                    $table->text('alamat')->nullable();
+                }
+                if (! Schema::hasColumn('employees', 'address')) {
+                    $table->text('address')->nullable();
                 }
             });
         }

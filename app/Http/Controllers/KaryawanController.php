@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Division;
 use App\Models\Employee;
 use App\Models\Karyawan;
+use App\Models\Position;
 use App\Support\DatabaseSchemaGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class KaryawanController extends Controller
 {
@@ -26,7 +29,54 @@ class KaryawanController extends Controller
             return $list;
         });
 
-        return view('employees.index', compact('employees'));
+        // Ambil data Master Jabatan & Divisi untuk dropdown
+        $positions = DatabaseSchemaGuard::run(function () {
+            $defaultPositions = [
+                'HR Manager',
+                'Spesialis SDM',
+                'Spesialis Rekrutmen',
+                'Software Engineer',
+                'Analis Data',
+                'Staff Keuangan',
+                'Staff Operasional',
+                'Admin Gudang',
+                'Spesialis Logistik',
+            ];
+
+            if (Schema::hasTable('positions')) {
+                $dbPositions = Position::orderBy('nama_jabatan', 'asc')->pluck('nama_jabatan')->toArray();
+                if (! empty($dbPositions)) {
+                    return array_values(array_unique(array_merge($dbPositions, $defaultPositions)));
+                }
+            }
+
+            return $defaultPositions;
+        });
+
+        $divisions = DatabaseSchemaGuard::run(function () {
+            $defaultDivisions = ['Logistik', 'Keuangan', 'SDM', 'Teknologi Informasi', 'Operasional'];
+
+            if (Schema::hasTable('divisions')) {
+                $dbDivisions = Division::orderBy('nama_divisi', 'asc')->pluck('nama_divisi')->toArray();
+                if (! empty($dbDivisions)) {
+                    return array_values(array_unique(array_merge($dbDivisions, $defaultDivisions)));
+                }
+            }
+
+            return $defaultDivisions;
+        });
+
+        return view('employees.index', compact('employees', 'positions', 'divisions'));
+    }
+
+    /**
+     * Menampilkan form KTP untuk karyawan yang baru dibuat (via session)
+     */
+    public function showKtpForm(string $id)
+    {
+        $employee = Employee::findOrFail($id);
+
+        return view('employees.index', compact('employee'));
     }
 
     /**
@@ -72,10 +122,32 @@ class KaryawanController extends Controller
         $validated['name'] = $validated['nama'];
         $validated['position'] = $validated['jabatan'];
         $validated['department'] = $validated['divisi'];
-        $validated['address'] = $validated['alamat'] ?? null;
+        if (! empty($validated['alamat'])) {
+            $validated['address'] = $validated['alamat'];
+        } else {
+            unset($validated['address']);
+        }
         $validated['tanggal_aktif'] = $validated['tanggal_aktif'] ?? now()->toDateString();
 
-        DatabaseSchemaGuard::run(function () use ($validated) {
+        if (Schema::hasTable('positions')) {
+            $posObj = Position::where('nama_jabatan', $validated['jabatan'])->first();
+            if ($posObj) {
+                $validated['position_id'] = $posObj->id;
+                if (! isset($validated['division_id']) && $posObj->division_id) {
+                    $validated['division_id'] = $posObj->division_id;
+                }
+            }
+        }
+        if (Schema::hasTable('divisions')) {
+            $divObj = Division::where('nama_divisi', $validated['divisi'])->first();
+            if ($divObj) {
+                $validated['division_id'] = $divObj->id;
+            }
+        }
+
+        $newEmployee = null;
+
+        DatabaseSchemaGuard::run(function () use ($validated, &$newEmployee) {
             $emp = Employee::create($validated);
             $emp->recordStatusHistory(
                 $emp->status_kerja,
@@ -83,9 +155,12 @@ class KaryawanController extends Controller
                 'Karyawan terdaftar dan mulai aktif bekerja.',
                 'Admin HR'
             );
+            $newEmployee = $emp;
         });
 
-        return redirect('/')->with('success', 'Karyawan baru berhasil ditambahkan.');
+        // Redirect ke halaman utama dengan trigger untuk buka modal KTP
+        return redirect('/')->with('open_ktp_modal', $newEmployee->id)
+            ->with('ktp_nama', $newEmployee->nama);
     }
 
     /**
@@ -97,13 +172,13 @@ class KaryawanController extends Controller
         $oldStatus = $employee->status_kerja;
 
         $validated = $request->validate([
-            'nik' => ['required', 'string', 'max:30', 'regex:/^[A-Za-z0-9\-]+$/', 'unique:employees,nik,' . $employee->id],
+            'nik' => ['required', 'string', 'max:30', 'regex:/^[A-Za-z0-9\-]+$/', 'unique:employees,nik,'.$employee->id],
             'nama' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z\s\.,\']+$/'],
             'jabatan' => 'required|string|max:50',
             'divisi' => 'required|string|max:50',
             'status_kerja' => 'required|in:aktif,nonaktif',
             'tanggal_aktif' => 'nullable|date',
-            'nik_ktp' => ['nullable', 'string', 'regex:/^[0-9]{16}$/', 'unique:employees,nik_ktp,' . $employee->id],
+            'nik_ktp' => ['nullable', 'string', 'regex:/^[0-9]{16}$/', 'unique:employees,nik_ktp,'.$employee->id],
             'tempat_lahir' => ['nullable', 'string', 'max:100', 'regex:/^[A-Za-z\s\.,\'\-]+$/'],
             'tanggal_lahir' => 'nullable|date',
             'jenis_kelamin' => 'nullable|in:Laki-laki,Perempuan',
@@ -134,8 +209,26 @@ class KaryawanController extends Controller
         $validated['name'] = $validated['nama'];
         $validated['position'] = $validated['jabatan'];
         $validated['department'] = $validated['divisi'];
-        if (array_key_exists('alamat', $validated)) {
+        if (! empty($validated['alamat'])) {
             $validated['address'] = $validated['alamat'];
+        } else {
+            unset($validated['address']);
+        }
+
+        if (Schema::hasTable('positions')) {
+            $posObj = Position::where('nama_jabatan', $validated['jabatan'])->first();
+            if ($posObj) {
+                $validated['position_id'] = $posObj->id;
+                if ($posObj->division_id) {
+                    $validated['division_id'] = $posObj->division_id;
+                }
+            }
+        }
+        if (Schema::hasTable('divisions')) {
+            $divObj = Division::where('nama_divisi', $validated['divisi'])->first();
+            if ($divObj) {
+                $validated['division_id'] = $divObj->id;
+            }
         }
 
         DatabaseSchemaGuard::run(function () use ($employee, $validated, $oldStatus, $request) {
@@ -164,6 +257,45 @@ class KaryawanController extends Controller
         });
 
         return redirect('/')->with('success', "Data karyawan {$employee->nama} berhasil diperbarui.");
+    }
+
+    /**
+     * Menyimpan / memperbarui data KTP karyawan (M12-US1: Data Diri KTP)
+     */
+    public function updateKtp(Request $request, string $id)
+    {
+        $employee = Employee::findOrFail($id);
+
+        $validated = $request->validate([
+            'nik_ktp' => ['nullable', 'string', 'regex:/^[0-9]{16}$/', 'unique:employees,nik_ktp,'.$employee->id],
+            'tempat_lahir' => ['nullable', 'string', 'max:100', 'regex:/^[A-Za-z\s\.,\'\-]+$/'],
+            'tanggal_lahir' => 'nullable|date',
+            'jenis_kelamin' => 'nullable|in:Laki-laki,Perempuan',
+            'golongan_darah' => 'nullable|in:A,B,AB,O,-',
+            'alamat' => 'nullable|string|max:500',
+            'rt_rw' => ['nullable', 'string', 'max:20', 'regex:/^[0-9\/\-]+$/'],
+            'kelurahan_desa' => 'nullable|string|max:100',
+            'kecamatan' => 'nullable|string|max:100',
+            'kabupaten_kota' => 'nullable|string|max:100',
+            'provinsi' => 'nullable|string|max:100',
+            'agama' => 'nullable|string|max:30',
+            'status_perkawinan' => 'nullable|string|max:30',
+            'pekerjaan_ktp' => 'nullable|string|max:100',
+            'kewarganegaraan' => 'nullable|in:WNI,WNA',
+        ], [
+            'nik_ktp.regex' => 'NIK KTP harus terdiri dari 16 digit angka.',
+            'nik_ktp.unique' => 'NIK KTP sudah terdaftar pada karyawan lain.',
+        ]);
+
+        if (! empty($validated['alamat'])) {
+            $validated['address'] = $validated['alamat'];
+        }
+
+        DatabaseSchemaGuard::run(function () use ($employee, $validated) {
+            $employee->update($validated);
+        });
+
+        return redirect('/')->with('success', "Data KTP karyawan {$employee->nama} berhasil disimpan.");
     }
 
     /**
@@ -262,7 +394,7 @@ class KaryawanController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Berhasil mengambil daftar karyawan aktif.',
-            'data' => $karyawanAktif
+            'data' => $karyawanAktif,
         ], 200);
     }
 }
