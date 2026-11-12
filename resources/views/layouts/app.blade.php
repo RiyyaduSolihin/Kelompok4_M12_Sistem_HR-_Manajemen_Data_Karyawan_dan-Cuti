@@ -9,6 +9,35 @@
 
     <!-- Scripts and Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        /* Fallback utility classes untuk Modal KTP & Riwayat agar selalu bisa di-scroll dan 2 kolom di Vercel */
+        .overflow-y-auto { overflow-y: auto !important; }
+        .overflow-hidden { overflow: hidden !important; }
+        .max-h-\[90vh\] { max-height: 90vh !important; }
+        .max-h-\[85vh\] { max-height: 85vh !important; }
+        .max-h-\[80vh\] { max-height: 80vh !important; }
+        .max-h-\[75vh\] { max-height: 75vh !important; }
+        .max-h-\[70vh\] { max-height: 70vh !important; }
+        .max-h-\[65vh\] { max-height: 65vh !important; }
+        .max-h-\[60vh\] { max-height: 60vh !important; }
+        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+        .col-span-2 { grid-column: span 2 / span 2 !important; }
+        .shrink-0 { flex-shrink: 0 !important; }
+        @media (min-width: 640px) {
+            .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+            .sm\:col-span-2 { grid-column: span 2 / span 2 !important; }
+        }
+        /* Pastikan semua modal fixed memiliki batas tinggi layar & bisa di-scroll jika konten panjang */
+        div[id^="modal-"] > div {
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        div[id^="modal-"] form {
+            overflow-y: auto;
+            max-height: calc(90vh - 65px);
+        }
+    </style>
 </head>
 <body class="min-h-screen flex flex-col antialiased">
 

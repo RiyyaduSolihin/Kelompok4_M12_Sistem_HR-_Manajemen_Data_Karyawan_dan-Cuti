@@ -2,7 +2,7 @@
     "version": 2,
     "framework": null,
     "regions": ["sin1"],
-    "buildCommand": "",
+    "buildCommand": "npm run build",
     "outputDirectory": "public",
     "functions": {
         "api/index.php": {
