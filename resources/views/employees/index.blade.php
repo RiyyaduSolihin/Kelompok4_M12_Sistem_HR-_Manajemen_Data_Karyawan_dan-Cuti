@@ -24,7 +24,7 @@
         <div>
             <button 
                 type="button" 
-                onclick="openModal('modal-tambah')"
+                onclick="openTambahModal()"
                 class="inline-flex items-center gap-2 h-[40px] px-4 rounded-[var(--radius-sm)] bg-[var(--primary)] text-white text-sm font-semibold hover:bg-[var(--primary-hover)] transition cursor-pointer shadow-sm"
             >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -46,24 +46,17 @@
         </div>
     @endif
 
-    @if($errors->has('nik'))
-        <div style="background:#FEE2E2;border-left:4px solid #DC2626;padding:1rem;border-radius:6px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 4px rgba(220,38,38,0.15);">
-            <div style="display:flex;align-items:center;gap:12px;">
-                <span style="width:24px;height:24px;border-radius:50%;background:#DC2626;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">✕</span>
-                <div>
-                    <p style="font-size:14px;font-weight:700;color:#991B1B;margin:0;">NIK sudah terdaftar</p>
-                    <p style="font-size:12px;color:#DC2626;margin:2px 0 0;">{{ $errors->first('nik') }}</p>
-                </div>
-            </div>
-            <button onclick="this.parentElement.remove()" style="color:#DC2626;background:none;border:none;font-size:20px;font-weight:700;cursor:pointer;margin-left:16px;" onmouseover="this.style.color='#991B1B'" onmouseout="this.style.color='#DC2626'">&times;</button>
-        </div>
-    @elseif($errors->any())
-        <div style="background:#FEE2E2;border-left:4px solid #DC2626;padding:1rem;border-radius:6px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 4px rgba(220,38,38,0.15);">
-            <div style="display:flex;align-items:center;gap:12px;">
+    @if($errors->any())
+        <div style="background:#FEE2E2;border-left:4px solid #DC2626;padding:1rem;border-radius:6px;display:flex;align-items:flex-start;justify-content:space-between;box-shadow:0 1px 4px rgba(220,38,38,0.15);">
+            <div style="display:flex;align-items:flex-start;gap:12px;">
                 <span style="width:24px;height:24px;border-radius:50%;background:#DC2626;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">✕</span>
                 <div>
                     <p style="font-size:14px;font-weight:700;color:#991B1B;margin:0;">Gagal menyimpan data</p>
-                    <p style="font-size:12px;color:#DC2626;margin:2px 0 0;">{{ $errors->first() }}</p>
+                    <ul style="font-size:12px;color:#DC2626;margin:2px 0 0;padding-left:16px;list-style:disc;">
+                        @foreach($errors->all() as $errorMessage)
+                            <li>{{ $errorMessage }}</li>
+                        @endforeach
+                    </ul>
                 </div>
             </div>
             <button onclick="this.parentElement.remove()" style="color:#DC2626;background:none;border:none;font-size:20px;font-weight:700;cursor:pointer;margin-left:16px;" onmouseover="this.style.color='#991B1B'" onmouseout="this.style.color='#DC2626'">&times;</button>
@@ -187,8 +180,8 @@
                                     >
                                         Ubah
                                     </button>
-                                    <button 
-                                        type="button" 
+                                    <button
+                                        type="button"
                                         onclick="openDetailModal({{ json_encode($emp) }})"
                                         class="text-sm font-semibold text-[var(--text)] hover:text-[var(--primary)] hover:underline transition cursor-pointer"
                                     >
@@ -209,20 +202,34 @@
                                         </button>
                                         
                                         <!-- Dropdown Menu -->
-                                        <div id="dropdown-{{ $emp->id }}" class="hidden absolute right-0 mt-1 w-44 bg-[var(--surface)] border border-[var(--line)] rounded-[var(--radius-sm)] shadow-[var(--shadow)] z-20 py-1">
+                                        <div id="dropdown-{{ $emp->id }}" class="hidden absolute right-0 mt-1 w-52 bg-[var(--surface)] border border-[var(--line)] rounded-[var(--radius-sm)] shadow-[var(--shadow)] z-20 py-1">
                                             @if($emp->status_kerja === 'aktif')
-                                                <button 
-                                                    type="button" 
+                                                <button
+                                                    type="button"
                                                     onclick="openDeactivateModal('{{ $emp->id }}', '{{ $emp->nama }}')"
-                                                    class="w-full text-left px-3 py-2 text-xs font-semibold text-[var(--danger-action)] hover:bg-[var(--danger-bg)] transition"
+                                                    class="block w-full text-left px-3 py-2 text-xs font-semibold text-[var(--danger-action)] hover:bg-[var(--danger-bg)] transition"
                                                 >
                                                     Nonaktifkan karyawan
                                                 </button>
                                             @else
-                                                <span class="block px-3 py-2 text-xs text-[var(--text-muted)]">
+                                                <button
+                                                    type="button"
+                                                    onclick="openActivateModal('{{ $emp->id }}', '{{ $emp->nama }}')"
+                                                    class="block w-full text-left px-3 py-2 text-xs font-semibold text-[var(--success-fg)] hover:bg-[var(--success-bg)] transition"
+                                                >
+                                                    Aktifkan kembali
+                                                </button>
+                                                <span class="block px-3 py-2 text-xs text-[var(--text-muted)] border-t border-[var(--line)]">
                                                     Berhenti: {{ $emp->tanggal_berhenti ? \Carbon\Carbon::parse($emp->tanggal_berhenti)->translatedFormat('j M Y') : '-' }}
                                                 </span>
                                             @endif
+                                            <button
+                                                type="button"
+                                                onclick="openDetailModal({{ json_encode($emp) }}, 'history')"
+                                                class="block w-full text-left px-3 py-2 text-xs font-semibold text-[var(--text)] hover:bg-[var(--surface-2)] transition border-t border-[var(--line)]"
+                                            >
+                                                Lihat riwayat status
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -232,7 +239,7 @@
                         <tr>
                             <td colspan="6" class="py-12 text-center text-[var(--text-muted)]">
                                 <p class="text-sm">Belum ada data karyawan.</p>
-                                <button onclick="openModal('modal-tambah')" class="mt-2 text-sm text-[var(--primary)] font-semibold hover:underline">
+                                <button onclick="openTambahModal()" class="mt-2 text-sm text-[var(--primary)] font-semibold hover:underline">
                                     Tambah karyawan sekarang
                                 </button>
                             </td>
@@ -281,24 +288,44 @@
 <div id="modal-tambah" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
     <div class="bg-[var(--surface)] border border-[var(--line)] rounded-[var(--radius-lg)] w-full max-w-lg h-[600px] max-h-[90vh] shadow-[var(--shadow)] flex flex-col overflow-hidden">
         <div class="px-6 py-4 border-b border-[var(--line)] flex items-center justify-between shrink-0">
-            <h3 class="text-lg font-bold font-head text-[var(--text)]">Tambah karyawan baru</h3>
+            <h3 id="tambah-form-title" class="text-lg font-bold font-head text-[var(--text)]">Tambah karyawan baru</h3>
             <button onclick="closeModal('modal-tambah')" class="text-[var(--text-muted)] hover:text-[var(--text)] text-xl font-bold">&times;</button>
         </div>
 
-        <form action="{{ route('karyawan.store') }}" method="POST" class="flex flex-col flex-1 overflow-hidden">
+        <form id="tambah-form" action="{{ route('karyawan.store') }}" method="POST" data-store-url="{{ route('karyawan.store') }}" data-submit-label="Simpan" class="flex flex-col flex-1 overflow-hidden" novalidate>
             @csrf
+
+            {{-- Penanda bahwa setelah data karyawan disimpan, pengguna diarahkan ke form data KTP --}}
+            <input type="hidden" name="require_ktp" id="tambah-require-ktp" value="0">
+
+            {{-- Notifikasi Gagal Menyimpan Data (disembunyikan secara default) --}}
+            <div id="tambah-error-alert" class="hidden px-6 pt-4 shrink-0">
+                <div class="bg-[var(--danger-bg)] border-l-4 border-[var(--danger-solid)] p-4 rounded-[var(--radius-sm)] flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <span class="w-5 h-5 rounded-full bg-[var(--danger-solid)] text-white flex items-center justify-center text-xs font-bold shrink-0">&times;</span>
+                        <div>
+                            <p class="text-sm font-semibold text-[var(--danger-fg)]">Gagal menyimpan data</p>
+                            <p id="tambah-error-message" class="text-xs text-[var(--danger-solid)] mt-0.5"></p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="document.getElementById('tambah-error-alert').classList.add('hidden')" class="text-[var(--danger-solid)] hover:opacity-75 text-lg font-bold cursor-pointer shrink-0">&times;</button>
+                </div>
+            </div>
+
             <div class="p-6 space-y-4 overflow-y-auto flex-1">
             <div>
                 <label class="block text-sm font-semibold text-[var(--text)] mb-1">
                     NIK <span class="text-[var(--danger-solid)]">*</span>
                 </label>
-                <input 
-                    type="text" 
-                    name="nik" 
-                    required 
-                    placeholder="Contoh: EMP-1010" 
-                    oninvalid="this.setCustomValidity('NIK wajib diisi.')" 
-                    oninput="this.setCustomValidity('')" 
+                <input
+                    type="text"
+                    id="tambah-nik"
+                    name="nik"
+                    value="{{ old('nik') }}"
+                    required
+                    placeholder="Contoh: EMP-1010"
+                    oninvalid="this.setCustomValidity('NIK wajib diisi.')"
+                    oninput="this.setCustomValidity('')"
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
             </div>
@@ -307,13 +334,15 @@
                 <label class="block text-sm font-semibold text-[var(--text)] mb-1">
                     Nama lengkap <span class="text-[var(--danger-solid)]">*</span>
                 </label>
-                <input 
-                    type="text" 
-                    name="nama" 
-                    required 
-                    placeholder="Contoh: Rani Kusumawati" 
-                    oninvalid="this.setCustomValidity('Nama karyawan wajib diisi.')" 
-                    oninput="this.setCustomValidity('')" 
+                <input
+                    type="text"
+                    id="tambah-nama"
+                    name="nama"
+                    value="{{ old('nama') }}"
+                    required
+                    placeholder="Contoh: Rani Kusumawati"
+                    oninvalid="this.setCustomValidity('Nama karyawan wajib diisi.')"
+                    oninput="this.setCustomValidity('')"
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
             </div>
@@ -322,16 +351,17 @@
                 <label class="block text-sm font-semibold text-[var(--text)] mb-1">
                     Jabatan <span class="text-[var(--danger-solid)]">*</span>
                 </label>
-                <select 
-                    name="jabatan" 
-                    required 
-                    oninvalid="this.setCustomValidity('Jabatan wajib dipilih.')" 
-                    onchange="this.setCustomValidity('')" 
+                <select
+                    id="tambah-jabatan"
+                    name="jabatan"
+                    required
+                    oninvalid="this.setCustomValidity('Jabatan wajib dipilih.')"
+                    onchange="this.setCustomValidity('')"
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
-                    <option value="" disabled selected>Pilih Jabatan</option>
+                    <option value="" disabled @selected(! old('jabatan'))>Pilih Jabatan</option>
                     @foreach($positions as $pos)
-                        <option value="{{ $pos }}">{{ $pos }}</option>
+                        <option value="{{ $pos }}" @selected(old('jabatan') === $pos)>{{ $pos }}</option>
                     @endforeach
                 </select>
             </div>
@@ -340,16 +370,17 @@
                 <label class="block text-sm font-semibold text-[var(--text)] mb-1">
                     Divisi <span class="text-[var(--danger-solid)]">*</span>
                 </label>
-                <select 
-                    name="divisi" 
-                    required 
-                    oninvalid="this.setCustomValidity('Divisi wajib dipilih.')" 
-                    onchange="this.setCustomValidity('')" 
+                <select
+                    id="tambah-divisi"
+                    name="divisi"
+                    required
+                    oninvalid="this.setCustomValidity('Divisi wajib dipilih.')"
+                    onchange="this.setCustomValidity('')"
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
-                    <option value="" disabled selected>Pilih Divisi</option>
+                    <option value="" disabled @selected(! old('divisi'))>Pilih Divisi</option>
                     @foreach($divisions as $div)
-                        <option value="{{ $div }}">{{ $div }}</option>
+                        <option value="{{ $div }}" @selected(old('divisi') === $div)>{{ $div }}</option>
                     @endforeach
                 </select>
             </div>
@@ -358,11 +389,12 @@
                 <label class="block text-sm font-semibold text-[var(--text)] mb-1">
                     Status kerja <span class="text-[var(--danger-solid)]">*</span>
                 </label>
-                <input type="hidden" name="status_kerja" value="aktif">
-                <input 
-                    type="text" 
-                    value="Aktif" 
-                    readonly 
+                <input type="hidden" name="status_kerja" id="tambah-status" value="aktif">
+                <input
+                    type="text"
+                    id="tambah-status-label"
+                    value="Aktif"
+                    readonly
                     tabindex="-1"
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface-2)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] cursor-not-allowed focus:outline-none select-none font-medium"
                 >
@@ -380,6 +412,7 @@
                 </button>
                 <button
                     type="submit"
+                    id="tambah-submit-label"
                     class="h-[40px] px-5 rounded-[var(--radius-sm)] bg-[var(--primary)] text-white text-sm font-semibold hover:bg-[var(--primary-hover)] transition"
                 >
                     Simpan
@@ -390,29 +423,70 @@
 </div>
 
 <!-- ========================================== -->
-<!-- MODAL 2: UBAH DATA KARYAWAN                -->
+<!-- MODAL 2: UBAH DATA KARYAWAN / DATA KTP     -->
 <!-- ========================================== -->
 <div id="modal-edit" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
-    <div class="bg-[var(--surface)] border border-[var(--line)] rounded-[var(--radius-lg)] w-full max-w-lg shadow-[var(--shadow)] overflow-hidden">
-        <div class="px-6 py-4 border-b border-[var(--line)] flex items-center justify-between">
+    <div class="bg-[var(--surface)] border border-[var(--line)] rounded-[var(--radius-lg)] w-full max-w-lg h-[600px] max-h-[90vh] shadow-[var(--shadow)] flex flex-col overflow-hidden">
+        <div class="px-6 py-4 border-b border-[var(--line)] flex items-center justify-between shrink-0">
             <h3 class="text-lg font-bold font-head text-[var(--text)]">Ubah data karyawan</h3>
             <button onclick="closeModal('modal-edit')" class="text-[var(--text-muted)] hover:text-[var(--text)] text-xl font-bold">&times;</button>
         </div>
 
-        <form id="edit-form" method="POST" class="p-6 space-y-4">
-            @csrf
-            @method('PUT')
+        {{-- Navigasi pilihan data yang akan diubah --}}
+        <div class="px-6 pt-4 shrink-0">
+            <div class="grid grid-cols-2 gap-3">
+                <button
+                    type="button"
+                    id="tab-edit-karyawan"
+                    onclick="showEditTab('karyawan')"
+                    class="detail-tab-active"
+                >
+                    Data Karyawan
+                </button>
+
+                <button
+                    type="button"
+                    id="tab-edit-ktp"
+                    onclick="showEditTab('ktp')"
+                    class="detail-tab-inactive"
+                >
+                    Data KTP
+                </button>
+            </div>
+        </div>
+
+        {{-- Notifikasi Gagal Menyimpan Data (disembunyikan secara default) --}}
+        <div id="edit-error-alert" class="hidden px-6 pt-4 shrink-0">
+            <div class="bg-[var(--danger-bg)] border-l-4 border-[var(--danger-solid)] p-4 rounded-[var(--radius-sm)] flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <span class="w-5 h-5 rounded-full bg-[var(--danger-solid)] text-white flex items-center justify-center text-xs font-bold shrink-0">&times;</span>
+                    <div>
+                        <p class="text-sm font-semibold text-[var(--danger-fg)]">Gagal menyimpan data</p>
+                        <p id="edit-error-message" class="text-xs text-[var(--danger-solid)] mt-0.5"></p>
+                    </div>
+                </div>
+                <button type="button" onclick="document.getElementById('edit-error-alert').classList.add('hidden')" class="text-[var(--danger-solid)] hover:opacity-75 text-lg font-bold cursor-pointer shrink-0">&times;</button>
+            </div>
+        </div>
+
+        {{-- TAB: UBAH DATA KARYAWAN --}}
+        <div id="panel-edit-karyawan-wrap" class="flex-1 min-h-0">
+            <form id="edit-form" method="POST" data-submit-label="Simpan perubahan" class="h-full flex flex-col overflow-hidden" novalidate>
+                @csrf
+                @method('PUT')
+
+                <div id="panel-edit-karyawan" class="p-6 space-y-4 overflow-y-auto flex-1">
             <div>
                 <label class="block text-sm font-semibold text-[var(--text)] mb-1">
                     NIK <span class="text-[var(--danger-solid)]">*</span>
                 </label>
-                <input 
-                    type="text" 
+                <input
+                    type="text"
                     id="edit-nik"
-                    name="nik" 
-                    required 
-                    oninvalid="this.setCustomValidity('NIK wajib diisi.')" 
-                    oninput="this.setCustomValidity('')" 
+                    name="nik"
+                    required
+                    oninvalid="this.setCustomValidity('NIK wajib diisi.')"
+                    oninput="this.setCustomValidity('')"
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
             </div>
@@ -421,13 +495,13 @@
                 <label class="block text-sm font-semibold text-[var(--text)] mb-1">
                     Nama lengkap <span class="text-[var(--danger-solid)]">*</span>
                 </label>
-                <input 
-                    type="text" 
+                <input
+                    type="text"
                     id="edit-nama"
-                    name="nama" 
-                    required 
-                    oninvalid="this.setCustomValidity('Nama karyawan wajib diisi.')" 
-                    oninput="this.setCustomValidity('')" 
+                    name="nama"
+                    required
+                    oninvalid="this.setCustomValidity('Nama karyawan wajib diisi.')"
+                    oninput="this.setCustomValidity('')"
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
             </div>
@@ -436,12 +510,12 @@
                 <label class="block text-sm font-semibold text-[var(--text)] mb-1">
                     Jabatan <span class="text-[var(--danger-solid)]">*</span>
                 </label>
-                <select 
+                <select
                     id="edit-jabatan"
-                    name="jabatan" 
-                    required 
-                    oninvalid="this.setCustomValidity('Jabatan wajib dipilih.')" 
-                    onchange="this.setCustomValidity('')" 
+                    name="jabatan"
+                    required
+                    oninvalid="this.setCustomValidity('Jabatan wajib dipilih.')"
+                    onchange="this.setCustomValidity('')"
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
                     <option value="" disabled>Pilih Jabatan</option>
@@ -455,12 +529,12 @@
                 <label class="block text-sm font-semibold text-[var(--text)] mb-1">
                     Divisi <span class="text-[var(--danger-solid)]">*</span>
                 </label>
-                <select 
+                <select
                     id="edit-divisi"
-                    name="divisi" 
-                    required 
-                    oninvalid="this.setCustomValidity('Divisi wajib dipilih.')" 
-                    onchange="this.setCustomValidity('')" 
+                    name="divisi"
+                    required
+                    oninvalid="this.setCustomValidity('Divisi wajib dipilih.')"
+                    onchange="this.setCustomValidity('')"
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
                     <option value="" disabled>Pilih Divisi</option>
@@ -474,12 +548,12 @@
                 <label class="block text-sm font-semibold text-[var(--text)] mb-1">
                     Status kerja <span class="text-[var(--danger-solid)]">*</span>
                 </label>
-                <select 
+                <select
                     id="edit-status"
-                    name="status_kerja" 
-                    required 
-                    oninvalid="this.setCustomValidity('Status kerja wajib dipilih.')" 
-                    onchange="this.setCustomValidity('')" 
+                    name="status_kerja"
+                    required
+                    oninvalid="this.setCustomValidity('Status kerja wajib dipilih.')"
+                    onchange="this.setCustomValidity('')"
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
                     <option value="aktif">Aktif</option>
@@ -487,22 +561,53 @@
                 </select>
             </div>
 
-            <div class="pt-4 flex items-center justify-end gap-3 border-t border-[var(--line)]">
-                <button 
-                    type="button" 
+            </div>{{-- end scrollable body --}}
+
+            <div class="px-6 py-4 border-t border-[var(--line)] bg-[var(--surface)] flex items-center justify-end gap-3 shrink-0">
+                <button
+                    type="button"
                     onclick="closeModal('modal-edit')"
                     class="h-[40px] px-4 rounded-[var(--radius-sm)] border border-[var(--line-strong)] text-sm font-semibold text-[var(--text)] hover:bg-[var(--surface-2)] transition"
                 >
                     Batal
                 </button>
-                <button 
-                    type="submit" 
+                <button
+                    type="submit"
                     class="h-[40px] px-5 rounded-[var(--radius-sm)] bg-[var(--primary)] text-white text-sm font-semibold hover:bg-[var(--primary-hover)] transition"
                 >
                     Simpan perubahan
                 </button>
             </div>
-        </form>
+            </form>
+        </div>
+
+        {{-- TAB: UBAH DATA KTP --}}
+        <div id="panel-edit-ktp-wrap" class="hidden flex-1 min-h-0">
+            <form id="edit-ktp-form" method="POST" data-submit-label="Simpan data KTP" class="h-full flex flex-col overflow-hidden" novalidate>
+                @csrf
+                @method('PUT')
+
+                <div id="panel-edit-ktp" class="p-6 space-y-4 overflow-y-auto flex-1">
+                    @include('employees.partials.ktp-fields', ['required' => true])
+                </div>
+
+                <div class="px-6 py-4 border-t border-[var(--line)] bg-[var(--surface)] flex items-center justify-end gap-3 shrink-0">
+                    <button
+                        type="button"
+                        onclick="closeModal('modal-edit')"
+                        class="h-[40px] px-4 rounded-[var(--radius-sm)] border border-[var(--line-strong)] text-sm font-semibold text-[var(--text)] hover:bg-[var(--surface-2)] transition"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="submit"
+                        class="h-[40px] px-5 rounded-[var(--radius-sm)] bg-[var(--primary)] text-white text-sm font-semibold hover:bg-[var(--primary-hover)] transition"
+                    >
+                        Simpan data KTP
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -517,7 +622,7 @@
      class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
 
     <div class="bg-[var(--surface)] border border-[var(--line)]
-                rounded-xl w-full max-w-xl max-h-[85vh]
+                rounded-xl w-full max-w-xl h-[600px] max-h-[90vh]
                 flex flex-col shadow-[var(--shadow)] overflow-hidden">
 
         <!-- HEADER -->
@@ -543,7 +648,7 @@
 
         <!-- NAVIGASI -->
         <div class="px-6 pt-4 shrink-0">
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-3 gap-3">
 
                 <button type="button"
                         id="tab-employee"
@@ -559,16 +664,23 @@
                     Data KTP
                 </button>
 
+                <button type="button"
+                        id="tab-history"
+                        onclick="showDetailTab('history')"
+                        class="detail-tab-inactive">
+                    Riwayat
+                </button>
+
             </div>
         </div>
 
 
 
-        <!-- CONTENT -->
+        <!-- CONTENT (tinggi tetap agar semua tab sama besar) -->
         <div class="px-6 py-4 overflow-y-auto flex-1">
 
             <!-- PANEL DATA KARYAWAN -->
-            <div id="panel-employee">
+            <div id="panel-employee" class="min-h-full">
 
                 <h4 class="text-sm font-bold text-[var(--text)] mb-1">
                     Informasi Kepegawaian
@@ -620,7 +732,7 @@
             </div>
 
             <!-- PANEL DATA KTP -->
-            <div id="panel-ktp" class="hidden">
+            <div id="panel-ktp" class="hidden min-h-full">
 
                 <h4 class="text-sm font-bold text-[var(--text)] mb-1">
                     Identitas Kependudukan
@@ -730,6 +842,23 @@
                 </div>
 
             </div>
+
+            <!-- PANEL RIWAYAT STATUS KERJA -->
+            <div id="panel-history" class="hidden min-h-full">
+
+                <h4 class="text-sm font-bold text-[var(--text)] mb-1">
+                    Riwayat Status Kepegawaian
+                </h4>
+
+                <p class="text-xs text-[var(--text-muted)] mb-3">
+                    Catatan kapan karyawan diaktifkan, dinonaktifkan, dan diaktifkan kembali.
+                </p>
+
+                <div id="detail-history-list" class="space-y-3">
+                    {{-- Diisi secara dinamis oleh openDetailModal() --}}
+                </div>
+
+            </div>
         </div>
 
         <!-- FOOTER -->
@@ -785,228 +914,13 @@
         </div>
 
         {{-- Form Body (Scrollable) --}}
-        <form id="ktp-form" method="POST" class="flex flex-col flex-1 overflow-hidden" novalidate>
+        <form id="ktp-form" method="POST" data-submit-label="Simpan Data KTP" class="flex flex-col flex-1 overflow-hidden" novalidate>
             @csrf
             @method('PUT')
 
             <div class="p-6 space-y-4 overflow-y-auto flex-1">
 
-                {{-- NIK KTP --}}
-                <div>
-                    <label class="block text-sm font-semibold text-[var(--text)] mb-1">
-                        NIK KTP <span class="text-[var(--danger-solid)]">*</span> <span class="text-xs text-[var(--text-muted)] font-normal">(16 digit angka)</span>
-                    </label>
-                    <input
-                        type="text"
-                        name="nik_ktp"
-                        required
-                        maxlength="16"
-                        inputmode="numeric"
-                        pattern="[0-9]{16}"
-                        placeholder="Contoh: 3273015503920001"
-                        oninvalid="this.setCustomValidity(this.value.trim() === '' ? 'NIK KTP wajib diisi.' : 'NIK KTP harus terdiri dari 16 digit angka.')"
-                        oninput="this.setCustomValidity('')"
-                        class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
-                    >
-                </div>
-
-                {{-- Tempat & Tanggal Lahir (2 kolom) --}}
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-sm font-semibold text-[var(--text)] mb-1">Tempat Lahir <span class="text-[var(--danger-solid)]">*</span></label>
-                        <input
-                            type="text"
-                            name="tempat_lahir"
-                            required
-                            placeholder="Contoh: Bandung"
-                            oninvalid="this.setCustomValidity('Tempat lahir wajib diisi.')"
-                            oninput="this.setCustomValidity('')"
-                            class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
-                        >
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-[var(--text)] mb-1">Tanggal Lahir <span class="text-[var(--danger-solid)]">*</span></label>
-                        <input
-                            type="date"
-                            name="tanggal_lahir"
-                            required
-                            oninvalid="this.setCustomValidity('Tanggal lahir wajib diisi.')"
-                            oninput="this.setCustomValidity('')"
-                            class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
-                        >
-                    </div>
-                </div>
-
-                {{-- Jenis Kelamin & Golongan Darah (2 kolom) --}}
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-sm font-semibold text-[var(--text)] mb-1">Jenis Kelamin <span class="text-[var(--danger-solid)]">*</span></label>
-                        <select
-                            name="jenis_kelamin"
-                            required
-                            oninvalid="this.setCustomValidity('Jenis kelamin wajib dipilih.')"
-                            onchange="this.setCustomValidity('')"
-                            class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
-                        >
-                            <option value="">— Pilih —</option>
-                            <option value="Laki-laki">Laki-laki</option>
-                            <option value="Perempuan">Perempuan</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-[var(--text)] mb-1">Golongan Darah</label>
-                        <select
-                            name="golongan_darah"
-                            class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
-                        >
-                            <option value="">— Pilih —</option>
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                            <option value="AB">AB</option>
-                            <option value="O">O</option>
-                            <option value="-">Tidak diketahui</option>
-                        </select>
-                    </div>
-                </div>
-
-                {{-- Alamat --}}
-                <div>
-                    <label class="block text-sm font-semibold text-[var(--text)] mb-1">Alamat Sesuai KTP <span class="text-[var(--danger-solid)]">*</span></label>
-                    <input
-                        type="text"
-                        name="alamat"
-                        required
-                        placeholder="Contoh: Jl. Dr. Setiabudhi No. 193"
-                        oninvalid="this.setCustomValidity('Alamat wajib diisi.')"
-                        oninput="this.setCustomValidity('')"
-                        class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
-                    >
-                </div>
-
-                {{-- RT/RW & Kelurahan/Desa (2 kolom) --}}
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-sm font-semibold text-[var(--text)] mb-1">RT / RW <span class="text-[var(--danger-solid)]">*</span></label>
-                        <input
-                            type="text"
-                            name="rt_rw"
-                            required
-                            placeholder="Contoh: 002/005"
-                            oninvalid="this.setCustomValidity('RT / RW wajib diisi.')"
-                            oninput="this.setCustomValidity('')"
-                            class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
-                        >
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-[var(--text)] mb-1">Kelurahan / Desa <span class="text-[var(--danger-solid)]">*</span></label>
-                        <input
-                            type="text"
-                            name="kelurahan_desa"
-                            required
-                            placeholder="Contoh: Gegerkalong"
-                            oninvalid="this.setCustomValidity('Kelurahan / Desa wajib diisi.')"
-                            oninput="this.setCustomValidity('')"
-                            class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
-                        >
-                    </div>
-                </div>
-
-                {{-- Kecamatan & Kabupaten/Kota (2 kolom) --}}
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-sm font-semibold text-[var(--text)] mb-1">Kecamatan <span class="text-[var(--danger-solid)]">*</span></label>
-                        <input
-                            type="text"
-                            name="kecamatan"
-                            required
-                            placeholder="Contoh: Sukasari"
-                            oninvalid="this.setCustomValidity('Kecamatan wajib diisi.')"
-                            oninput="this.setCustomValidity('')"
-                            class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
-                        >
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-[var(--text)] mb-1">Kabupaten / Kota <span class="text-[var(--danger-solid)]">*</span></label>
-                        <input
-                            type="text"
-                            name="kabupaten_kota"
-                            required
-                            placeholder="Contoh: Kota Bandung"
-                            oninvalid="this.setCustomValidity('Kabupaten / Kota wajib diisi.')"
-                            oninput="this.setCustomValidity('')"
-                            class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
-                        >
-                    </div>
-                </div>
-
-                {{-- Provinsi --}}
-                <div>
-                    <label class="block text-sm font-semibold text-[var(--text)] mb-1">Provinsi <span class="text-[var(--danger-solid)]">*</span></label>
-                    <input
-                        type="text"
-                        name="provinsi"
-                        required
-                        placeholder="Contoh: Jawa Barat"
-                        oninvalid="this.setCustomValidity('Provinsi wajib diisi.')"
-                        oninput="this.setCustomValidity('')"
-                        class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
-                    >
-                </div>
-
-                {{-- Agama & Status Perkawinan (2 kolom) --}}
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-sm font-semibold text-[var(--text)] mb-1">Agama</label>
-                        <select
-                            name="agama"
-                            class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
-                        >
-                            <option value="">— Pilih —</option>
-                            <option value="Islam">Islam</option>
-                            <option value="Kristen Protestan">Kristen Protestan</option>
-                            <option value="Kristen Katolik">Kristen Katolik</option>
-                            <option value="Hindu">Hindu</option>
-                            <option value="Buddha">Buddha</option>
-                            <option value="Konghucu">Konghucu</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-[var(--text)] mb-1">Status Perkawinan</label>
-                        <select
-                            name="status_perkawinan"
-                            class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
-                        >
-                            <option value="">— Pilih —</option>
-                            <option value="Belum Kawin">Belum Kawin</option>
-                            <option value="Kawin">Kawin</option>
-                            <option value="Cerai Hidup">Cerai Hidup</option>
-                            <option value="Cerai Mati">Cerai Mati</option>
-                        </select>
-                    </div>
-                </div>
-
-                {{-- Pekerjaan KTP & Kewarganegaraan (2 kolom) --}}
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-sm font-semibold text-[var(--text)] mb-1">Pekerjaan (di KTP)</label>
-                        <input
-                            type="text"
-                            name="pekerjaan_ktp"
-                            placeholder="Contoh: Karyawan Swasta"
-                            class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
-                        >
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-[var(--text)] mb-1">Kewarganegaraan</label>
-                        <select
-                            name="kewarganegaraan"
-                            class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
-                        >
-                            <option value="WNI" selected>WNI</option>
-                            <option value="WNA">WNA</option>
-                        </select>
-                    </div>
-                </div>
+                @include('employees.partials.ktp-fields', ['required' => true])
 
             </div>{{-- end scrollable body --}}
 
@@ -1045,27 +959,96 @@
                 <label class="block text-sm font-semibold text-[var(--text)] mb-1">
                     Tanggal berhenti <span class="text-[var(--danger-solid)]">*</span>
                 </label>
-                <input 
-                    type="date" 
-                    name="tanggal_berhenti" 
-                    required 
+                <input
+                    type="date"
+                    name="tanggal_berhenti"
+                    required
                     value="{{ date('Y-m-d') }}"
                     class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
                 >
             </div>
+            <div>
+                <label class="block text-sm font-semibold text-[var(--text)] mb-1">
+                    Keterangan
+                </label>
+                <input
+                    type="text"
+                    name="keterangan"
+                    maxlength="255"
+                    placeholder="Contoh: Karyawan mengajukan cuti panjang"
+                    class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
+                >
+            </div>
             <div class="pt-4 flex items-center justify-end gap-3 border-t border-[var(--line)]">
-                <button 
-                    type="button" 
+                <button
+                    type="button"
                     onclick="closeModal('modal-deactivate')"
                     class="h-[40px] px-4 rounded-[var(--radius-sm)] border border-[var(--line-strong)] text-sm font-semibold text-[var(--text)] hover:bg-[var(--surface-2)] cursor-pointer"
                 >
                     Batal
                 </button>
-                <button 
-                    type="submit" 
+                <button
+                    type="submit"
                     class="h-[40px] px-4 rounded-[var(--radius-sm)] bg-[var(--danger-action)] text-white text-sm font-semibold hover:opacity-90 transition cursor-pointer"
                 >
                     Nonaktifkan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL: AKTIFKAN KEMBALI KARYAWAN            -->
+<!-- ========================================== -->
+<div id="modal-activate" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-[var(--surface)] border border-[var(--line)] rounded-[var(--radius-lg)] w-full max-w-md shadow-[var(--shadow)] overflow-hidden">
+        <div class="px-6 py-4 border-b border-[var(--line)]">
+            <h3 class="text-lg font-bold font-head text-[var(--text)]">Aktifkan kembali karyawan?</h3>
+        </div>
+        <form id="activate-form" method="POST" class="p-6 space-y-4">
+            @csrf
+            @method('PATCH')
+            <p class="text-sm text-[var(--text-muted)]">
+                Anda akan mengaktifkan kembali status kerja <strong id="activate-emp-name" class="text-[var(--text)]"></strong>. Riwayat penonaktifan sebelumnya tetap tersimpan.
+            </p>
+            <div>
+                <label class="block text-sm font-semibold text-[var(--text)] mb-1">
+                    Tanggal mulai aktif kembali <span class="text-[var(--danger-solid)]">*</span>
+                </label>
+                <input
+                    type="date"
+                    name="tanggal_aktif"
+                    required
+                    value="{{ date('Y-m-d') }}"
+                    class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
+                >
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-[var(--text)] mb-1">
+                    Keterangan
+                </label>
+                <input
+                    type="text"
+                    name="keterangan"
+                    maxlength="255"
+                    placeholder="Contoh: Karyawan kembali bekerja"
+                    class="w-full h-[40px] px-3 text-sm bg-[var(--surface)] border border-[var(--line-strong)] rounded-[var(--radius-sm)] text-[var(--text)] focus:outline-none focus:border-[var(--primary)]"
+                >
+            </div>
+            <div class="pt-4 flex items-center justify-end gap-3 border-t border-[var(--line)]">
+                <button
+                    type="button"
+                    onclick="closeModal('modal-activate')"
+                    class="h-[40px] px-4 rounded-[var(--radius-sm)] border border-[var(--line-strong)] text-sm font-semibold text-[var(--text)] hover:bg-[var(--surface-2)] cursor-pointer"
+                >
+                    Batal
+                </button>
+                <button
+                    type="submit"
+                    class="h-[40px] px-4 rounded-[var(--radius-sm)] bg-[var(--success-solid)] text-white text-sm font-semibold hover:opacity-90 transition cursor-pointer"
+                >
+                    Aktifkan kembali
                 </button>
             </div>
         </form>
@@ -1083,8 +1066,115 @@
     }
 
     // Kembali dari modal KTP ke form pengisian data karyawan
+    // Data karyawan yang sudah ditambahkan tidak hilang: form diisi ulang
+    // dengan data karyawan tersebut dan mode form diubah menjadi "Ubah".
     function backToEmployeeForm() {
         closeModal('modal-ktp');
+
+        const emp = window.karyawanTerkini;
+
+        if (emp) {
+            fillTambahForm(emp);
+        }
+
+        openModal('modal-tambah');
+    }
+
+    // Mengisi form "Tambah karyawan" dengan data karyawan tertentu.
+    function fillTambahForm(emp) {
+        const form = document.getElementById('tambah-form');
+
+        document.getElementById('tambah-nik').value = emp.nik || '';
+        document.getElementById('tambah-nama').value = emp.nama || '';
+        selectOptionByValue('tambah-jabatan', emp.jabatan);
+        selectOptionByValue('tambah-divisi', emp.divisi);
+
+        const status = emp.status_kerja || 'aktif';
+        document.getElementById('tambah-status').value = status;
+        document.getElementById('tambah-status-label').value = status === 'aktif' ? 'Aktif' : 'Nonaktif';
+
+        // Karena data karyawan sudah tersimpan, form berubah menjadi mode ubah
+        // agar simpan berikutnya memperbarui data, bukan membuat duplikat.
+        form.action = `/karyawan/${emp.id}`;
+        setTambahFormMethod('PUT');
+
+        // Data KTP belum dilengkapi, jadi setelah disimpan pengguna kembali
+        // diarahkan ke form data KTP.
+        document.getElementById('tambah-require-ktp').value = '1';
+
+        document.getElementById('tambah-form-title').textContent = 'Ubah data karyawan';
+        document.getElementById('tambah-submit-label').textContent = 'Simpan perubahan';
+        form.dataset.submitLabel = 'Simpan perubahan';
+    }
+
+    // Mengatur method spoofing pada form tambah (PUT saat mode ubah, dihapus saat tambah baru).
+    function setTambahFormMethod(method) {
+        const form = document.getElementById('tambah-form');
+        let field = form.querySelector('input[name="_method"]');
+
+        if (!method) {
+            if (field) field.remove();
+            return;
+        }
+
+        if (!field) {
+            field = document.createElement('input');
+            field.type = 'hidden';
+            field.name = '_method';
+            form.appendChild(field);
+        }
+
+        field.value = method;
+    }
+
+    // Memilih opsi pada <select>, menambah opsi baru bila belum tersedia.
+    function selectOptionByValue(selectId, value) {
+        if (!value) return;
+
+        const select = document.getElementById(selectId);
+        const exists = Array.from(select.options).some(opt => opt.value === value);
+
+        if (!exists) {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+            select.appendChild(option);
+        }
+
+        select.value = value;
+    }
+
+    // Membuka form data KTP untuk seorang karyawan.
+    function openKtpFormFor(id, nama) {
+        const form = document.getElementById('ktp-form');
+        const namaEl = document.getElementById('ktp-nama-karyawan');
+
+        if (!form || !namaEl) return;
+
+        form.action = `/karyawan/${id}/ktp`;
+        namaEl.textContent = nama || '';
+
+        closeModal('modal-tambah');
+        openModal('modal-ktp');
+    }
+
+    // Membuka modal "Tambah karyawan" dalam mode kosong (menambah karyawan baru).
+    function openTambahModal() {
+        const form = document.getElementById('tambah-form');
+
+        form.reset();
+        form.action = form.dataset.storeUrl;
+        setTambahFormMethod(null);
+        document.getElementById('tambah-status').value = 'aktif';
+        document.getElementById('tambah-status-label').value = 'Aktif';
+        document.getElementById('tambah-form-title').textContent = 'Tambah karyawan baru';
+        document.getElementById('tambah-submit-label').textContent = 'Simpan';
+        form.dataset.submitLabel = 'Simpan';
+
+        // Sembunyikan notifikasi gagal dari percobaan sebelumnya.
+        const tambahErrorAlert = document.getElementById('tambah-error-alert');
+        if (tambahErrorAlert) tambahErrorAlert.classList.add('hidden');
+
         openModal('modal-tambah');
     }
 
@@ -1126,12 +1216,74 @@
 
         document.getElementById('edit-status').value = emp.status_kerja;
         document.getElementById('edit-form').action = `/karyawan/${emp.id}`;
+
+        // Isi kolom data KTP sesuai data karyawan terpilih.
+        fillEditKtpFields(emp);
+        document.getElementById('edit-ktp-form').action = `/karyawan/${emp.id}/ktp`;
+
+        // Mulai dari tab data karyawan setiap kali modal dibuka.
+        showEditTab('karyawan');
+
         openModal('modal-edit');
+    }
+
+    // Mengisi kolom data KTP pada form ubah data KTP.
+    function fillEditKtpFields(emp) {
+        const form = document.getElementById('edit-ktp-form');
+
+        const setValue = (name, value) => {
+            const field = form.querySelector(`[name="${name}"]`);
+            if (field) field.value = value ?? '';
+        };
+
+        setValue('nik_ktp', emp.nik_ktp);
+        setValue('tempat_lahir', emp.tempat_lahir);
+        setValue('tanggal_lahir', emp.tanggal_lahir);
+        setValue('jenis_kelamin', emp.jenis_kelamin);
+        setValue('golongan_darah', emp.golongan_darah);
+        setValue('alamat', emp.alamat || emp.address);
+        setValue('rt_rw', emp.rt_rw);
+        setValue('kelurahan_desa', emp.kelurahan_desa);
+        setValue('kecamatan', emp.kecamatan);
+        setValue('kabupaten_kota', emp.kabupaten_kota);
+        setValue('provinsi', emp.provinsi);
+        setValue('agama', emp.agama);
+        setValue('status_perkawinan', emp.status_perkawinan);
+        setValue('pekerjaan_ktp', emp.pekerjaan_ktp);
+        setValue('kewarganegaraan', emp.kewarganegaraan || 'WNI');
+    }
+
+    // Mengganti tab pada modal ubah data: karyawan atau KTP.
+    function showEditTab(tab) {
+        const karyawanWrap = document.getElementById('panel-edit-karyawan-wrap');
+        const ktpWrap = document.getElementById('panel-edit-ktp-wrap');
+
+        const karyawanButton = document.getElementById('tab-edit-karyawan');
+        const ktpButton = document.getElementById('tab-edit-ktp');
+
+        karyawanWrap.classList.toggle('hidden', tab !== 'karyawan');
+        ktpWrap.classList.toggle('hidden', tab !== 'ktp');
+
+        karyawanButton.className = tab === 'karyawan' ? 'detail-tab-active' : 'detail-tab-inactive';
+        ktpButton.className = tab === 'ktp' ? 'detail-tab-active' : 'detail-tab-inactive';
+
+        // Sembunyikan notifikasi gagal dari tab sebelumnya agar tidak membingungkan.
+        const editErrorAlert = document.getElementById('edit-error-alert');
+        if (editErrorAlert) editErrorAlert.classList.add('hidden');
     }
 
     function formatTanggalIndo(dateStr) {
         if (!dateStr) return '-';
         const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        // Tanggal tanpa jam (format Y-m-d) diuraikan manual agar tidak bergeser hari.
+        const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+        if (dateOnly) {
+            const tanggal = Number(dateOnly[3]);
+            const indexBulan = Number(dateOnly[2]) - 1;
+            return `${tanggal} ${bulan[indexBulan]} ${dateOnly[1]}`;
+        }
+
         const d = new Date(dateStr);
         if (isNaN(d.getTime())) return dateStr;
         return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
@@ -1141,12 +1293,15 @@
 function showDetailTab(tab) {
     const employeePanel = document.getElementById('panel-employee');
     const ktpPanel = document.getElementById('panel-ktp');
+    const historyPanel = document.getElementById('panel-history');
 
     const employeeButton = document.getElementById('tab-employee');
     const ktpButton = document.getElementById('tab-ktp');
+    const historyButton = document.getElementById('tab-history');
 
     employeePanel.classList.toggle('hidden', tab !== 'employee');
     ktpPanel.classList.toggle('hidden', tab !== 'ktp');
+    historyPanel.classList.toggle('hidden', tab !== 'history');
 
     employeeButton.className =
         tab === 'employee'
@@ -1157,12 +1312,89 @@ function showDetailTab(tab) {
         tab === 'ktp'
             ? 'detail-tab-active'
             : 'detail-tab-inactive';
+
+    historyButton.className =
+        tab === 'history'
+            ? 'detail-tab-active'
+            : 'detail-tab-inactive';
+}
+
+/**
+ * Menampilkan riwayat status kepegawaian (aktif / nonaktif / aktif kembali)
+ * dalam bentuk linimasa waktu di tab "Riwayat".
+ */
+function renderStatusHistory(histories) {
+    const container = document.getElementById('detail-history-list');
+
+    if (!container) return;
+
+    const list = Array.isArray(histories) ? histories : [];
+
+    if (list.length === 0) {
+        container.innerHTML = `
+            <div class="bg-[var(--surface-2)] border border-[var(--line)] rounded-[var(--radius-lg)] p-6 text-center">
+                <p class="text-sm font-semibold text-[var(--text)]">Belum ada riwayat</p>
+                <p class="text-xs text-[var(--text-muted)] mt-1">
+                    Riwayat akan muncul saat status kerja karyawan berubah.
+                </p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = list.map(item => {
+        const isAktif = item.status === 'aktif';
+
+        const badge = isAktif
+            ? `<span class="inline-flex items-center gap-1.5 h-[24px] px-2.5 rounded-full text-xs font-semibold bg-[var(--success-bg)] text-[var(--success-fg)]">
+                   <span class="w-2 h-2 rounded-full bg-[var(--success-solid)]"></span>
+                   Aktif
+               </span>`
+            : `<span class="inline-flex items-center gap-1.5 h-[24px] px-2.5 rounded-full text-xs font-semibold bg-[var(--neutral-bg)] text-[var(--neutral-fg)]">
+                   <span class="w-2 h-2 rounded-full bg-[var(--neutral-solid)]"></span>
+                   Nonaktif
+               </span>`;
+
+        const keterangan = item.keterangan
+            ? `<p class="text-xs text-[var(--text-muted)] mt-1">${escapeHtml(item.keterangan)}</p>`
+            : '';
+
+        const changedBy = item.changed_by
+            ? `<p class="text-[11px] text-[var(--text-muted)] mt-1">Diubah oleh: ${escapeHtml(item.changed_by)}</p>`
+            : '';
+
+        return `
+            <div class="flex gap-3">
+                <div class="flex flex-col items-center shrink-0">
+                    <span class="w-3 h-3 rounded-full mt-1 ${isAktif ? 'bg-[var(--success-solid)]' : 'bg-[var(--neutral-solid)]'}"></span>
+                    <span class="w-px flex-1 bg-[var(--line)] my-1"></span>
+                </div>
+                <div class="pb-2 min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                        ${badge}
+                        <strong class="text-sm text-[var(--text)]">${formatTanggalIndo(item.tanggal_efektif)}</strong>
+                    </div>
+                    ${keterangan}
+                    ${changedBy}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+/**
+ * Melindungi teks riwayat dari karakter HTML agar tidak merusak tampilan.
+ */
+function escapeHtml(value) {
+    const div = document.createElement('div');
+    div.textContent = value ?? '';
+    return div.innerHTML;
 }
 
 
 
 
-function openDetailModal(emp) {
+function openDetailModal(emp, initialTab = 'employee') {
 
     // Helper untuk menampilkan data atau tanda "-"
     const setDetail = (id, value) => {
@@ -1259,8 +1491,11 @@ function openDetailModal(emp) {
     setDetail('detail-pekerjaan', emp.pekerjaan_ktp);
     setDetail('detail-wn', emp.kewarganegaraan);
 
-    // Selalu mulai dari tab Data Karyawan
-    showDetailTab('employee');
+    // RIWAYAT STATUS KERJA
+    renderStatusHistory(emp.status_histories || emp.statusHistories || []);
+
+    // Selalu mulai dari tab yang diminta
+    showDetailTab(initialTab);
 
     // Tampilkan modal
     openModal('modal-detail');
@@ -1271,6 +1506,12 @@ function openDetailModal(emp) {
         document.getElementById('deactivate-emp-name').textContent = nama;
         document.getElementById('deactivate-form').action = `/karyawan/${id}/deactivate`;
         openModal('modal-deactivate');
+    }
+
+    function openActivateModal(id, nama) {
+        document.getElementById('activate-emp-name').textContent = nama;
+        document.getElementById('activate-form').action = `/karyawan/${id}/activate`;
+        openModal('modal-activate');
     }
 
     function filterTable() {
@@ -1322,16 +1563,138 @@ function openDetailModal(emp) {
     });
 
     // ============================================================
-    // Validasi Form KTP: blokir submit + tampilkan notifikasi
+    // Validasi Form Ubah Data: blokir submit + tampilkan notifikasi
+    // Berlaku untuk form "Ubah Data Karyawan" dan "Ubah Data KTP".
+    // Seluruh pesan notifikasi menggunakan bahasa Indonesia.
     // ============================================================
-    (function() {
-        const form = document.getElementById('ktp-form');
+    const VALIDATION_RULES = {
+        karyawan: [
+            {
+                name: 'nik',
+                label: 'NIK',
+                required: true,
+                pattern: /^[A-Za-z0-9\-]+$/,
+                message: 'NIK tidak boleh mengandung spasi atau karakter aneh (hanya huruf, angka, dan tanda hubung "-").',
+            },
+            {
+                name: 'nama',
+                label: 'Nama karyawan',
+                required: true,
+                pattern: /^[A-Za-z\s\.,']+$/,
+                message: 'Nama karyawan tidak boleh mengandung angka atau karakter aneh (hanya huruf, spasi, titik, koma, dan tanda petik).',
+            },
+            {
+                name: 'jabatan',
+                label: 'Jabatan',
+                required: true,
+            },
+            {
+                name: 'divisi',
+                label: 'Divisi',
+                required: true,
+            },
+            {
+                name: 'status_kerja',
+                label: 'Status kerja',
+                required: true,
+            },
+        ],
+        ktp: [
+            {
+                name: 'nik_ktp',
+                label: 'NIK KTP',
+                required: true,
+                pattern: /^[0-9]{16}$/,
+                message: 'NIK KTP harus terdiri dari 16 digit angka.',
+            },
+            {
+                name: 'tempat_lahir',
+                label: 'Tempat lahir',
+                required: true,
+                pattern: /^[A-Za-z\s\.,'\-]+$/,
+                message: 'Tempat lahir hanya boleh berisi huruf, spasi, titik, koma, tanda hubung, dan tanda petik.',
+            },
+            {
+                name: 'tanggal_lahir',
+                label: 'Tanggal lahir',
+                required: true,
+            },
+            {
+                name: 'jenis_kelamin',
+                label: 'Jenis kelamin',
+                required: true,
+            },
+            {
+                name: 'alamat',
+                label: 'Alamat',
+                required: true,
+                pattern: /^[A-Za-z0-9\s\.,'\-\/#]+$/,
+                message: 'Alamat hanya boleh berisi huruf, angka, spasi, dan tanda baca yang lazim (titik, koma, tanda hubung, garis miring).',
+            },
+            {
+                name: 'rt_rw',
+                label: 'RT / RW',
+                required: true,
+                pattern: /^[0-9\/\-]+$/,
+                message: 'RT / RW hanya boleh berisi angka, garis miring, dan tanda hubung (contoh: 002/005).',
+            },
+            {
+                name: 'kelurahan_desa',
+                label: 'Kelurahan / Desa',
+                required: true,
+                pattern: /^[A-Za-z0-9\s\.,'\-]+$/,
+                message: 'Kelurahan / Desa hanya boleh berisi huruf, angka, spasi, titik, koma, dan tanda hubung.',
+            },
+            {
+                name: 'kecamatan',
+                label: 'Kecamatan',
+                required: true,
+                pattern: /^[A-Za-z0-9\s\.,'\-]+$/,
+                message: 'Kecamatan hanya boleh berisi huruf, angka, spasi, titik, koma, dan tanda hubung.',
+            },
+            {
+                name: 'kabupaten_kota',
+                label: 'Kabupaten / Kota',
+                required: true,
+                pattern: /^[A-Za-z0-9\s\.,'\-]+$/,
+                message: 'Kabupaten / Kota hanya boleh berisi huruf, angka, spasi, titik, koma, dan tanda hubung.',
+            },
+            {
+                name: 'provinsi',
+                label: 'Provinsi',
+                required: true,
+                pattern: /^[A-Za-z0-9\s\.,'\-]+$/,
+                message: 'Provinsi hanya boleh berisi huruf, angka, spasi, titik, koma, dan tanda hubung.',
+            },
+            {
+                name: 'agama',
+                label: 'Agama',
+                pattern: /^[A-Za-z\s]+$/,
+                message: 'Agama hanya boleh berisi huruf dan spasi.',
+            },
+            {
+                name: 'status_perkawinan',
+                label: 'Status perkawinan',
+                pattern: /^[A-Za-z\s]+$/,
+                message: 'Status perkawinan hanya boleh berisi huruf dan spasi.',
+            },
+            {
+                name: 'pekerjaan_ktp',
+                label: 'Pekerjaan (di KTP)',
+                pattern: /^[A-Za-z0-9\s\.,'\-]+$/,
+                message: 'Pekerjaan (di KTP) hanya boleh berisi huruf, angka, spasi, titik, koma, dan tanda hubung.',
+            },
+        ],
+    };
+
+    function attachFormValidation(formId, alertBoxId, alertMessageId, submitLabel, rules) {
+        const form = document.getElementById(formId);
         if (!form) return;
 
-        const alertBox = document.getElementById('ktp-error-alert');
-        const alertMessage = document.getElementById('ktp-error-message');
+        const alertBox = document.getElementById(alertBoxId);
+        const alertMessage = document.getElementById(alertMessageId);
 
-        // Tampilkan banner notifikasi gagal di atas form KTP
+        // Tampilkan banner notifikasi gagal di atas form
         function showError(message, field) {
             if (alertBox && alertMessage) {
                 alertMessage.textContent = message;
@@ -1340,39 +1703,55 @@ function openDetailModal(emp) {
             }
 
             if (field) {
+                // Handler inline `oninvalid` pada input selalu menulis pesan
+                // "wajib diisi" sehingga pesan dari server (mis. NIK duplikat)
+                // tertimpa. Nonaktifkan dulu saat menampilkan pesan notifikasi.
+                const inlineOnInvalid = field.oninvalid;
+                field.oninvalid = null;
+                field.setCustomValidity(message);
                 field.focus();
                 field.reportValidity();
+                field.oninvalid = inlineOnInvalid;
             }
         }
 
         function resetSubmitButton() {
             const submitBtn = form.querySelector('button[type="submit"]');
             if (submitBtn) {
-                submitBtn.innerHTML = 'Simpan Data KTP';
+                submitBtn.innerHTML = form.dataset.submitLabel || submitLabel;
                 submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
             }
+        }
+
+        // Validasi isi form: kolom wajib terisi dan karakter yang diperbolehkan.
+        function validateFields() {
+            for (const rule of rules) {
+                const field = form.querySelector('[name="' + rule.name + '"]');
+                if (!field) continue;
+
+                const value = String(field.value || '').trim();
+
+                if (rule.required && value === '') {
+                    return { message: (rule.label || 'Kolom ini') + ' wajib diisi.', field: field };
+                }
+
+                if (rule.pattern && value !== '' && !rule.pattern.test(value)) {
+                    return { message: rule.message, field: field };
+                }
+            }
+
+            return null;
         }
 
         form.addEventListener('submit', async function(event) {
             event.preventDefault();
             event.stopImmediatePropagation();
 
-            const nikKtpField = form.querySelector('[name="nik_ktp"]');
-            const nikKtpValue = String(nikKtpField?.value || '').trim();
-            const requiredFields = Array.from(form.querySelectorAll('[required]'));
-            const emptyFields = requiredFields.filter(field => !String(field.value || '').trim());
-
-            // 1) Validasi sisi klien: kolom wajib terisi
-            if (emptyFields.length > 0) {
+            // 1) Validasi sisi klien: kolom wajib terisi & karakter diperbolehkan
+            const clientError = validateFields();
+            if (clientError) {
                 resetSubmitButton();
-                showError('Kolom wajib diisi belum lengkap: ' + emptyFields.length + ' field.', emptyFields[0]);
-                return;
-            }
-
-            // 2) Validasi sisi klien: NIK KTP harus 16 digit angka
-            if (!/^[0-9]{16}$/.test(nikKtpValue)) {
-                resetSubmitButton();
-                showError('NIK KTP harus terdiri dari 16 digit angka.', nikKtpField);
+                showError(clientError.message, clientError.field);
                 return;
             }
 
@@ -1382,7 +1761,7 @@ function openDetailModal(emp) {
                 submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
             }
 
-            // 3) Kirim via AJAX supaya error server tampil di dalam form KTP
+            // 2) Kirim via AJAX supaya error server tampil di dalam form
             const formData = new FormData(form);
 
             try {
@@ -1399,18 +1778,18 @@ function openDetailModal(emp) {
                 });
 
                 // Sukses: server mengirim redirect (opaque). Muat ulang halaman
-                // supaya flash "Data KTP berhasil disimpan" tetap ditampilkan.
+                // supaya flash "berhasil diperbarui" tetap ditampilkan.
                 if (response.type === 'opaqueredirect' || response.status === 0) {
                     window.location.reload();
                     return;
                 }
 
-                // 422 = validasi server gagal (mis. NIK KTP duplikat / format salah)
+                // 422 = validasi server gagal (mis. NIK duplikat / format salah)
                 if (response.status === 422) {
                     const payload = await response.json();
                     const errors = payload.errors || {};
                     const firstKey = Object.keys(errors)[0];
-                    const message = firstKey ? errors[firstKey][0] : (payload.message || 'Data KTP gagal disimpan.');
+                    const message = firstKey ? errors[firstKey][0] : (payload.message || 'Data gagal disimpan.');
                     const field = firstKey ? form.querySelector('[name="' + firstKey + '"]') : null;
 
                     resetSubmitButton();
@@ -1420,7 +1799,7 @@ function openDetailModal(emp) {
 
                 // Error lain (419/500/dll) = tampilkan pesan dari server
                 if (!response.ok) {
-                    let message = 'Data KTP gagal disimpan. Silakan coba lagi.';
+                    let message = 'Data gagal disimpan. Silakan coba lagi.';
                     try {
                         const payload = await response.json();
                         const errors = payload.errors || {};
@@ -1438,7 +1817,7 @@ function openDetailModal(emp) {
                 window.location.reload();
             } catch (error) {
                 resetSubmitButton();
-                showError('Terjadi kesalahan saat menyimpan data KTP. Silakan coba lagi.', null);
+                showError('Terjadi kesalahan saat menyimpan data. Silakan coba lagi.', null);
             }
         });
 
@@ -1446,7 +1825,12 @@ function openDetailModal(emp) {
         form.addEventListener('input', function() {
             if (alertBox) alertBox.classList.add('hidden');
         });
-    })();
+    }
+
+    attachFormValidation('ktp-form', 'ktp-error-alert', 'ktp-error-message', 'Simpan Data KTP', VALIDATION_RULES.ktp);
+    attachFormValidation('edit-ktp-form', 'edit-error-alert', 'edit-error-message', 'Simpan data KTP', VALIDATION_RULES.ktp);
+    attachFormValidation('edit-form', 'edit-error-alert', 'edit-error-message', 'Simpan perubahan', VALIDATION_RULES.karyawan);
+    attachFormValidation('tambah-form', 'tambah-error-alert', 'tambah-error-message', 'Simpan', VALIDATION_RULES.karyawan);
 
     // ============================================================
     // Auto-buka Modal KTP setelah karyawan baru berhasil disimpan
@@ -1457,6 +1841,9 @@ function openDetailModal(emp) {
             const empNama = @json(session('ktp_nama', ''));
             const form    = document.getElementById('ktp-form');
             const namaEl  = document.getElementById('ktp-nama-karyawan');
+
+            // Disimpan agar tombol "Kembali" bisa mengisi ulang form data karyawan
+            window.karyawanTerkini = @json(session('ktp_employee', []));
 
             if (form && namaEl) {
                 form.action = `/karyawan/${empId}/ktp`;

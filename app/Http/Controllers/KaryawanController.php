@@ -80,44 +80,129 @@ class KaryawanController extends Controller
     }
 
     /**
-     * Menyimpan data karyawan baru dari form web
+     * Aturan validasi untuk kolom data karyawan (tab "Data Karyawan").
+     *
+     * @param  int|null  $ignoreId  ID karyawan yang sedang diubah, agar NIK miliknya sendiri tidak dianggap duplikat.
      */
-    public function store(Request $request)
+    private function karyawanRules(?int $ignoreId = null): array
     {
-        $validated = $request->validate([
-            'nik' => ['required', 'string', 'max:30', 'regex:/^[A-Za-z0-9\-]+$/', 'unique:employees,nik'],
+        return [
+            'nik' => ['required', 'string', 'max:30', 'regex:/^[A-Za-z0-9\-]+$/', $this->uniqueRule('nik', $ignoreId)],
             'nama' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z\s\.,\']+$/'],
-            'jabatan' => 'required|string|max:50',
-            'divisi' => 'required|string|max:50',
+            'jabatan' => ['required', 'string', 'max:50', 'regex:/^[A-Za-z0-9\s\.\&\'\(\)\/\-]+$/'],
+            'divisi' => ['required', 'string', 'max:50', 'regex:/^[A-Za-z0-9\s\.\&\'\(\)\/\-]+$/'],
             'status_kerja' => 'required|in:aktif,nonaktif',
             'tanggal_aktif' => 'nullable|date',
-            'nik_ktp' => ['nullable', 'string', 'regex:/^[0-9]{16}$/', 'unique:employees,nik_ktp'],
+        ];
+    }
+
+    /**
+     * Aturan validasi untuk kolom data diri sesuai KTP (tab "Data KTP").
+     *
+     * @param  int|null  $ignoreId  ID karyawan yang sedang diubah, agar NIK KTP miliknya sendiri tidak dianggap duplikat.
+     */
+    private function ktpRules(?int $ignoreId = null): array
+    {
+        return [
+            'nik_ktp' => ['nullable', 'string', 'regex:/^[0-9]{16}$/', $this->uniqueRule('nik_ktp', $ignoreId)],
             'tempat_lahir' => ['nullable', 'string', 'max:100', 'regex:/^[A-Za-z\s\.,\'\-]+$/'],
             'tanggal_lahir' => 'nullable|date',
             'jenis_kelamin' => 'nullable|in:Laki-laki,Perempuan',
             'golongan_darah' => 'nullable|in:A,B,AB,O,-',
-            'alamat' => 'nullable|string|max:500',
+            'alamat' => ['nullable', 'string', 'max:500', 'regex:/^[A-Za-z0-9\s\.,\'\-\/#]+$/'],
             'rt_rw' => ['nullable', 'string', 'max:20', 'regex:/^[0-9\/\-]+$/'],
-            'kelurahan_desa' => 'nullable|string|max:100',
-            'kecamatan' => 'nullable|string|max:100',
-            'kabupaten_kota' => 'nullable|string|max:100',
-            'provinsi' => 'nullable|string|max:100',
-            'agama' => 'nullable|string|max:30',
-            'status_perkawinan' => 'nullable|string|max:30',
-            'pekerjaan_ktp' => 'nullable|string|max:100',
+            'kelurahan_desa' => ['nullable', 'string', 'max:100', 'regex:/^[A-Za-z0-9\s\.,\'\-]+$/'],
+            'kecamatan' => ['nullable', 'string', 'max:100', 'regex:/^[A-Za-z0-9\s\.,\'\-]+$/'],
+            'kabupaten_kota' => ['nullable', 'string', 'max:100', 'regex:/^[A-Za-z0-9\s\.,\'\-]+$/'],
+            'provinsi' => ['nullable', 'string', 'max:100', 'regex:/^[A-Za-z0-9\s\.,\'\-]+$/'],
+            'agama' => ['nullable', 'string', 'max:30', 'regex:/^[A-Za-z\s]+$/'],
+            'status_perkawinan' => ['nullable', 'string', 'max:30', 'regex:/^[A-Za-z\s]+$/'],
+            'pekerjaan_ktp' => ['nullable', 'string', 'max:100', 'regex:/^[A-Za-z0-9\s\.,\'\-]+$/'],
             'kewarganegaraan' => 'nullable|in:WNI,WNA',
-        ], [
-            'nik.required' => 'NIK wajib diisi.',
-            'nik.unique' => 'Sistem menolak duplikasi: NIK sudah terdaftar.',
+        ];
+    }
+
+    /**
+     * Aturan unique yang mengabaikan satu baris (karyawan yang sedang diubah).
+     */
+    private function uniqueRule(string $column, ?int $ignoreId = null): string
+    {
+        return $ignoreId
+            ? 'unique:employees,'.$column.','.$ignoreId
+            : 'unique:employees,'.$column;
+    }
+
+    /**
+     * Pesan validasi berbahasa Indonesia untuk seluruh aturan di atas.
+     */
+    private function validationMessages(): array
+    {
+        return [
+            'required' => ':attribute wajib diisi.',
+            'string' => ':attribute harus berupa teks.',
+            'max.string' => ':attribute maksimal :max karakter.',
+            'date' => 'Format :attribute tidak valid.',
+            'in' => ':attribute yang dipilih tidak valid.',
             'nik.regex' => 'NIK tidak boleh mengandung spasi atau karakter aneh (hanya huruf, angka, dan tanda hubung "-").',
-            'nama.required' => 'Nama karyawan wajib diisi.',
+            'nik.unique' => 'Sistem menolak duplikasi: NIK sudah digunakan karyawan lain.',
             'nama.regex' => 'Nama karyawan tidak boleh mengandung angka atau karakter aneh (hanya huruf, spasi, titik, koma, dan tanda petik).',
-            'jabatan.required' => 'Jabatan wajib diisi.',
-            'divisi.required' => 'Divisi wajib diisi.',
-            'status_kerja.required' => 'Status kerja wajib diisi.',
+            'jabatan.regex' => 'Jabatan tidak boleh mengandung karakter aneh (hanya huruf, angka, spasi, titik, tanda hubung, dan tanda kurung).',
+            'divisi.regex' => 'Divisi tidak boleh mengandung karakter aneh (hanya huruf, angka, spasi, titik, tanda hubung, dan tanda kurung).',
             'nik_ktp.regex' => 'NIK KTP harus terdiri dari 16 digit angka.',
             'nik_ktp.unique' => 'NIK KTP sudah terdaftar pada karyawan lain.',
-        ]);
+            'tempat_lahir.regex' => 'Tempat lahir hanya boleh berisi huruf, spasi, titik, koma, tanda hubung, dan tanda petik.',
+            'alamat.regex' => 'Alamat hanya boleh berisi huruf, angka, spasi, dan tanda baca yang lazim (titik, koma, tanda hubung, garis miring).',
+            'rt_rw.regex' => 'RT / RW hanya boleh berisi angka, garis miring, dan tanda hubung (contoh: 002/005).',
+            'kelurahan_desa.regex' => 'Kelurahan / Desa hanya boleh berisi huruf, angka, spasi, titik, koma, dan tanda hubung.',
+            'kecamatan.regex' => 'Kecamatan hanya boleh berisi huruf, angka, spasi, titik, koma, dan tanda hubung.',
+            'kabupaten_kota.regex' => 'Kabupaten / Kota hanya boleh berisi huruf, angka, spasi, titik, koma, dan tanda hubung.',
+            'provinsi.regex' => 'Provinsi hanya boleh berisi huruf, angka, spasi, titik, koma, dan tanda hubung.',
+            'agama.regex' => 'Agama hanya boleh berisi huruf dan spasi.',
+            'status_perkawinan.regex' => 'Status perkawinan hanya boleh berisi huruf dan spasi.',
+            'pekerjaan_ktp.regex' => 'Pekerjaan (di KTP) hanya boleh berisi huruf, angka, spasi, titik, koma, dan tanda hubung.',
+        ];
+    }
+
+    /**
+     * Nama kolom dalam bahasa Indonesia agar pesan error otomatis terbaca jelas.
+     */
+    private function attributeNames(): array
+    {
+        return [
+            'nik' => 'NIK',
+            'nama' => 'nama karyawan',
+            'jabatan' => 'jabatan',
+            'divisi' => 'divisi',
+            'status_kerja' => 'status kerja',
+            'tanggal_aktif' => 'tanggal aktif',
+            'nik_ktp' => 'NIK KTP',
+            'tempat_lahir' => 'tempat lahir',
+            'tanggal_lahir' => 'tanggal lahir',
+            'jenis_kelamin' => 'jenis kelamin',
+            'golongan_darah' => 'golongan darah',
+            'alamat' => 'alamat',
+            'rt_rw' => 'RT / RW',
+            'kelurahan_desa' => 'kelurahan / desa',
+            'kecamatan' => 'kecamatan',
+            'kabupaten_kota' => 'kabupaten / kota',
+            'provinsi' => 'provinsi',
+            'agama' => 'agama',
+            'status_perkawinan' => 'status perkawinan',
+            'pekerjaan_ktp' => 'pekerjaan (di KTP)',
+            'kewarganegaraan' => 'kewarganegaraan',
+        ];
+    }
+
+    /**
+     * Menyimpan data karyawan baru dari form web
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate(
+            array_merge($this->karyawanRules(), $this->ktpRules()),
+            $this->validationMessages(),
+            $this->attributeNames()
+        );
 
         $validated['name'] = $validated['nama'];
         $validated['position'] = $validated['jabatan'];
@@ -159,8 +244,17 @@ class KaryawanController extends Controller
         });
 
         // Redirect ke halaman utama dengan trigger untuk buka modal KTP
-        return redirect('/')->with('open_ktp_modal', $newEmployee->id)
-            ->with('ktp_nama', $newEmployee->nama);
+        return redirect('/')
+            ->with('open_ktp_modal', $newEmployee->id)
+            ->with('ktp_nama', $newEmployee->nama)
+            ->with('ktp_employee', [
+                'id' => $newEmployee->id,
+                'nik' => $newEmployee->nik,
+                'nama' => $newEmployee->nama,
+                'jabatan' => $newEmployee->jabatan,
+                'divisi' => $newEmployee->divisi,
+                'status_kerja' => $newEmployee->status_kerja,
+            ]);
     }
 
     /**
@@ -171,40 +265,11 @@ class KaryawanController extends Controller
         $employee = Employee::findOrFail($id);
         $oldStatus = $employee->status_kerja;
 
-        $validated = $request->validate([
-            'nik' => ['required', 'string', 'max:30', 'regex:/^[A-Za-z0-9\-]+$/', 'unique:employees,nik,'.$employee->id],
-            'nama' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z\s\.,\']+$/'],
-            'jabatan' => 'required|string|max:50',
-            'divisi' => 'required|string|max:50',
-            'status_kerja' => 'required|in:aktif,nonaktif',
-            'tanggal_aktif' => 'nullable|date',
-            'nik_ktp' => ['nullable', 'string', 'regex:/^[0-9]{16}$/', 'unique:employees,nik_ktp,'.$employee->id],
-            'tempat_lahir' => ['nullable', 'string', 'max:100', 'regex:/^[A-Za-z\s\.,\'\-]+$/'],
-            'tanggal_lahir' => 'nullable|date',
-            'jenis_kelamin' => 'nullable|in:Laki-laki,Perempuan',
-            'golongan_darah' => 'nullable|in:A,B,AB,O,-',
-            'alamat' => 'nullable|string|max:500',
-            'rt_rw' => ['nullable', 'string', 'max:20', 'regex:/^[0-9\/\-]+$/'],
-            'kelurahan_desa' => 'nullable|string|max:100',
-            'kecamatan' => 'nullable|string|max:100',
-            'kabupaten_kota' => 'nullable|string|max:100',
-            'provinsi' => 'nullable|string|max:100',
-            'agama' => 'nullable|string|max:30',
-            'status_perkawinan' => 'nullable|string|max:30',
-            'pekerjaan_ktp' => 'nullable|string|max:100',
-            'kewarganegaraan' => 'nullable|in:WNI,WNA',
-        ], [
-            'nik.required' => 'NIK wajib diisi.',
-            'nik.unique' => 'Sistem menolak duplikasi: NIK sudah digunakan karyawan lain.',
-            'nik.regex' => 'NIK tidak boleh mengandung spasi atau karakter aneh (hanya huruf, angka, dan tanda hubung "-").',
-            'nama.required' => 'Nama karyawan wajib diisi.',
-            'nama.regex' => 'Nama karyawan tidak boleh mengandung angka atau karakter aneh (hanya huruf, spasi, titik, koma, dan tanda petik).',
-            'jabatan.required' => 'Jabatan wajib diisi.',
-            'divisi.required' => 'Divisi wajib diisi.',
-            'status_kerja.required' => 'Status kerja wajib diisi.',
-            'nik_ktp.regex' => 'NIK KTP harus terdiri dari 16 digit angka.',
-            'nik_ktp.unique' => 'NIK KTP sudah terdaftar pada karyawan lain.',
-        ]);
+        $validated = $request->validate(
+            array_merge($this->karyawanRules($employee->id), $this->ktpRules($employee->id)),
+            $this->validationMessages(),
+            $this->attributeNames()
+        );
 
         $validated['name'] = $validated['nama'];
         $validated['position'] = $validated['jabatan'];
@@ -213,6 +278,14 @@ class KaryawanController extends Controller
             $validated['address'] = $validated['alamat'];
         } else {
             unset($validated['address']);
+        }
+
+        // Jangan kosongkan tanggal aktif / berhenti bila tidak dikirim form,
+        // agar data riwayat kepegawaian tetap utuh saat data karyawan diperbarui.
+        foreach (['tanggal_aktif', 'tanggal_berhenti'] as $optionalDate) {
+            if (empty($validated[$optionalDate])) {
+                unset($validated[$optionalDate]);
+            }
         }
 
         if (Schema::hasTable('positions')) {
@@ -256,6 +329,22 @@ class KaryawanController extends Controller
             }
         });
 
+        // Setelah data karyawan disimpan, pengguna diarahkan ke form data KTP
+        // supaya data KTP wajib dilengkapi terlebih dahulu.
+        if ($request->boolean('require_ktp')) {
+            return redirect('/')
+                ->with('open_ktp_modal', $employee->id)
+                ->with('ktp_nama', $employee->nama)
+                ->with('ktp_employee', [
+                    'id' => $employee->id,
+                    'nik' => $employee->nik,
+                    'nama' => $employee->nama,
+                    'jabatan' => $employee->jabatan,
+                    'divisi' => $employee->divisi,
+                    'status_kerja' => $employee->status_kerja,
+                ]);
+        }
+
         return redirect('/')->with('success', "Data karyawan {$employee->nama} berhasil diperbarui.");
     }
 
@@ -266,28 +355,15 @@ class KaryawanController extends Controller
     {
         $employee = Employee::findOrFail($id);
 
-        $validated = $request->validate([
-            'nik_ktp' => ['nullable', 'string', 'regex:/^[0-9]{16}$/', 'unique:employees,nik_ktp,'.$employee->id],
-            'tempat_lahir' => ['nullable', 'string', 'max:100', 'regex:/^[A-Za-z\s\.,\'\-]+$/'],
-            'tanggal_lahir' => 'nullable|date',
-            'jenis_kelamin' => 'nullable|in:Laki-laki,Perempuan',
-            'golongan_darah' => 'nullable|in:A,B,AB,O,-',
-            'alamat' => 'nullable|string|max:500',
-            'rt_rw' => ['nullable', 'string', 'max:20', 'regex:/^[0-9\/\-]+$/'],
-            'kelurahan_desa' => 'nullable|string|max:100',
-            'kecamatan' => 'nullable|string|max:100',
-            'kabupaten_kota' => 'nullable|string|max:100',
-            'provinsi' => 'nullable|string|max:100',
-            'agama' => 'nullable|string|max:30',
-            'status_perkawinan' => 'nullable|string|max:30',
-            'pekerjaan_ktp' => 'nullable|string|max:100',
-            'kewarganegaraan' => 'nullable|in:WNI,WNA',
-        ], [
-            'nik_ktp.regex' => 'NIK KTP harus terdiri dari 16 digit angka.',
-            'nik_ktp.unique' => 'NIK KTP sudah terdaftar pada karyawan lain.',
-        ]);
+        $validated = $request->validate(
+            $this->ktpRules($employee->id),
+            $this->validationMessages(),
+            $this->attributeNames()
+        );
 
-        if (! empty($validated['alamat'])) {
+        // Alamat pada tabel employees diselaraskan dengan alamat sesuai KTP,
+        // termasuk ketika kolom dikosongkan lewat form ubah data KTP.
+        if (array_key_exists('alamat', $validated)) {
             $validated['address'] = $validated['alamat'];
         }
 
